@@ -65,7 +65,7 @@ subprojects {
             if (githubCredentials != null) {
                 maven {
                     name = "GitHubPackages"
-                    url = uri("https://maven.pkg.github.com/modelix/modelix")
+                    url = uri("https://maven.pkg.github.com/modelix/mpsbuild")
                     if (githubCredentials != null) {
                         credentials {
                             username = githubCredentials.first
