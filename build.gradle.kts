@@ -37,8 +37,14 @@ val githubCredentials = if (project.hasProperty("gpr.user") && project.hasProper
     }
 
 group = "org.modelix"
-version = SimpleDateFormat("yyyyMMddHHmm").format(Date()) + "-SNAPSHOT"
 description = "Replacement for the MPS build language"
+
+val versionFile = projectDir.resolve("version.txt")
+version = if (versionFile.exists()) {
+    versionFile.readText().trim()
+} else {
+    "0.0." + SimpleDateFormat("yyyyMMddHHmm").format(Date()) + "-SNAPSHOT"
+}
 
 subprojects {
     apply(plugin = "maven-publish")
