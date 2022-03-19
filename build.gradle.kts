@@ -36,7 +36,7 @@ val githubCredentials = if (project.hasProperty("gpr.user") && project.hasProper
         null
     }
 
-group = "org.modelix"
+group = "org.modelix.mpsbuild"
 description = "Replacement for the MPS build language"
 
 val versionFile = projectDir.resolve("version.txt")
@@ -52,13 +52,13 @@ subprojects {
     group = rootProject.group
     version = rootProject.version
 
-            repositories {
-                mavenLocal()
-                maven { url = uri("https://repo.maven.apache.org/maven2") }
-                mavenCentral()
-                maven { url = uri("https://artifacts.itemis.cloud/repository/maven-mps/") }
-                maven { url = uri("https://projects.itemis.de/nexus/content/repositories/mbeddr") }
-            }
+    repositories {
+        mavenLocal()
+        maven { url = uri("https://repo.maven.apache.org/maven2") }
+        mavenCentral()
+        maven { url = uri("https://artifacts.itemis.cloud/repository/maven-mps/") }
+        maven { url = uri("https://projects.itemis.de/nexus/content/repositories/mbeddr") }
+    }
 
     publishing {
         repositories {

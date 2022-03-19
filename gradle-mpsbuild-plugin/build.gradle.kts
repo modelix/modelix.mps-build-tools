@@ -24,9 +24,10 @@ dependencies {
 
 publishing {
     publications {
-        create("buildPlugin", MavenPublication::class.java) {
+        create("gradlePlugin", MavenPublication::class.java) {
             groupId = project.group.toString()
             version = project.version.toString()
+            artifactId = "gradle-plugin"
             from(components["java"])
         }
     }

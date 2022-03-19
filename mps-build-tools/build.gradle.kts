@@ -26,8 +26,8 @@ tasks.getByName<Test>("test") {
 publishing {
     publications {
         create<MavenPublication>("maven") {
-            groupId = "org.modelix"
-            artifactId = "mps-build-tools"
+            groupId = project.group.toString()
+            artifactId = "build-tools"
             version = project.version.toString()
 
             from(components["java"])
