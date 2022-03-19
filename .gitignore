@@ -1,0 +1,9 @@
+.gradle
+/build
+/*/build
+
+# modules are configured by gradle
+.idea/modules
+
+.DS_Store
+.idea/uiDesigner.xml
