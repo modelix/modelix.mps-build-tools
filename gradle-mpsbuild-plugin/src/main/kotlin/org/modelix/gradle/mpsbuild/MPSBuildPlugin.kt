@@ -13,7 +13,6 @@
  */
 package org.modelix.gradle.mpsbuild
 
-import org.apache.commons.io.FileUtils
 import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -475,11 +474,7 @@ class MPSBuildPlugin : Plugin<Project> {
 
     private fun generateAntScript(generator: BuildScriptGenerator, antScriptFile: File): BuildScriptGenerator {
         val xml = generator.generateXML()
-        try {
-            FileUtils.writeStringToFile(antScriptFile, xml, StandardCharsets.UTF_8)
-        } catch (e: IOException) {
-            throw RuntimeException(e)
-        }
+        antScriptFile.writeText(xml)
         return generator
     }
 

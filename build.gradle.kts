@@ -1,6 +1,3 @@
-import java.text.SimpleDateFormat
-import java.util.*
-
 buildscript {
     repositories {
         /* It is useful to have the central maven repo before the Itemis's one
@@ -14,15 +11,11 @@ buildscript {
     }
 
     dependencies {
-        classpath("de.itemis.mps:mps-gradle-plugin:mps20211.1.5.281.69e6edc")
-        classpath("com.google.googlejavaformat:google-java-format:1.8+")
     }
 }
 
 plugins {
-    id("com.diffplug.gradle.spotless") version "4.5.1" apply false
     id("org.jetbrains.kotlin.jvm") version "1.6.10" apply false
-    id("org.jetbrains.kotlin.multiplatform") version "1.6.10" apply false
     id("org.jetbrains.kotlin.plugin.serialization") version "1.6.10" apply false
     id("maven-publish")
     id("com.palantir.git-version") version "0.13.0"
@@ -109,6 +102,5 @@ subprojects {
         }
     }
 }
-
 
 defaultTasks("assemble")

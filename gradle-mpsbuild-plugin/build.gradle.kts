@@ -1,12 +1,6 @@
 plugins {
-    id("java")
     id("maven-publish")
-    id("org.jetbrains.kotlin.jvm")
-}
-
-tasks.withType<JavaCompile> {
-    sourceCompatibility = "11"
-    targetCompatibility = "11"
+    kotlin("jvm")
 }
 
 repositories {
@@ -16,10 +10,9 @@ repositories {
 
 dependencies {
     implementation(project(":mps-build-tools"))
-    implementation("commons-io:commons-io:2.11.0")
     implementation("org.zeroturnaround:zt-zip:1.14")
     implementation(gradleApi())
-    testImplementation("junit:junit:4.12")
+    testImplementation("junit:junit:4.13.2")
 }
 
 publishing {
