@@ -40,9 +40,16 @@ val githubCredentials = if (project.hasProperty("gpr.user") && project.hasProper
 group = "org.modelix.mpsbuild"
 description = "Replacement for the MPS build language"
 
-val gitVersion: groovy.lang.Closure<String> by extra
-gitVersion()
-version = gitVersion()
+val versionFile = projectDir.resolve("version.txt")
+version = if (versionFile.exists()) {
+    versionFile.readText().trim()
+} else {
+    val gitVersion: groovy.lang.Closure<String> by extra
+    gitVersion()
+}
+if (!project.findProperty("ciBuild")?.toString().toBoolean()) {
+    version = "$version-SNAPSHOT"
+}
 println("Version: $version")
 
 subprojects {
