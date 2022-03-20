@@ -25,6 +25,7 @@ plugins {
     id("org.jetbrains.kotlin.multiplatform") version "1.6.10" apply false
     id("org.jetbrains.kotlin.plugin.serialization") version "1.6.10" apply false
     id("maven-publish")
+    id("com.palantir.git-version") version "0.13.0"
 }
 
 val githubCredentials = if (project.hasProperty("gpr.user") && project.hasProperty("gpr.key")) {
@@ -39,12 +40,10 @@ val githubCredentials = if (project.hasProperty("gpr.user") && project.hasProper
 group = "org.modelix.mpsbuild"
 description = "Replacement for the MPS build language"
 
-val versionFile = projectDir.resolve("version.txt")
-version = if (versionFile.exists()) {
-    versionFile.readText().trim()
-} else {
-    "0.0." + SimpleDateFormat("yyyyMMddHHmm").format(Date()) + "-SNAPSHOT"
-}
+val gitVersion: groovy.lang.Closure<String> by extra
+gitVersion()
+version = gitVersion()
+println("Version: $version")
 
 subprojects {
     apply(plugin = "maven-publish")
