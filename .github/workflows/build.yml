@@ -20,4 +20,4 @@ jobs:
     - name: Assemble
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: ./gradlew build
+      run: ./gradlew build -PciBuild=true
