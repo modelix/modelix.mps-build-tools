@@ -24,4 +24,4 @@ jobs:
         NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
         NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: ./gradlew build publish -PciBuild=true
+      run: ./gradlew build publish -PciBuild=true -P=projects.itemis.de.user${{secrets.PROJECTS_ITEMIS_DE_USER}} -P=projects.itemis.de.pw${{secrets.PROJECTS_ITEMIS_DE_PW}}
