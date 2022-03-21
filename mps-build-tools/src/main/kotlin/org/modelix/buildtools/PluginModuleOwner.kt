@@ -63,7 +63,7 @@ class PluginModuleOwner(path: ModulePath, val pluginId: String, val name: String
                     it.getPath("META-INF", "plugin.xml").readLines()
                 }
             } else {
-                path.getLocalAbsolutePath().resolve("META-INF").resolve("Plugin.xml").readLines()
+                path.getLocalAbsolutePath().resolve("META-INF").resolve("plugin.xml").readLines()
             }
             return fromPluginDescriptor(path, lines)
         }
