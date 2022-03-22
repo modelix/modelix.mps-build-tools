@@ -28,8 +28,6 @@ import org.gradle.api.tasks.Exec
 import org.modelix.buildtools.*
 import org.zeroturnaround.zip.ZipUtil
 import java.io.File
-import java.io.IOException
-import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.text.SimpleDateFormat
 import java.util.*
@@ -327,7 +325,7 @@ class MPSBuildPlugin : Plugin<Project> {
                     publication.artifact(artifact)
                 }
             }
-            publications.create("all", MavenPublication::class.java) { publication ->
+            publications.create("_all_", MavenPublication::class.java) { publication ->
                 publication.groupId = project.group.toString()
                 publication.artifactId = "all"
                 publication.version = publicationsVersion
@@ -349,6 +347,25 @@ class MPSBuildPlugin : Plugin<Project> {
 
         project.tasks.withType(GenerateMavenPom::class.java).matching { it.name.matches(Regex(".+_.+_.+")) }.all {
             it.dependsOn(taskLoadPomDependencies)
+        }
+
+        val repositories = publishing?.repositories ?: listOf()
+        val ownArtifactNames = settings.getPublications().map { it.name.toValidPublicationName() }.toSet() + "all"
+        for (repo in repositories) {
+            project.tasks.register("publishAllMpsPublicationsTo${repo.name.firstLetterUppercase()}Repository") { task ->
+                task.group = "publishing"
+                task.description = "Publishes all Maven publications created by the mpsbuild plugin"
+                task.dependsOn(project.tasks.withType(PublishToMavenRepository::class.java).matching {
+                    it.repository == repo && ownArtifactNames.contains(it.publication.artifactId)
+                })
+            }
+        }
+        project.tasks.register("publishAllMpsPublications") { task ->
+            task.group = "publishing"
+            task.description = "Publishes all Maven publications created by the mpsbuild plugin"
+            task.dependsOn(project.tasks.withType(PublishToMavenRepository::class.java).matching {
+                ownArtifactNames.contains(it.publication.artifactId)
+            })
         }
     }
 
@@ -591,3 +608,5 @@ class MPSBuildPlugin : Plugin<Project> {
         }
     }
 }
+
+private fun String.firstLetterUppercase() = if (isEmpty()) this else substring(0, 1).uppercase() + drop(1)
