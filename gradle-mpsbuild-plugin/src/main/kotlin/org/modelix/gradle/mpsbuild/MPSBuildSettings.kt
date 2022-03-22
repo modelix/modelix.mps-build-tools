@@ -184,10 +184,11 @@ open class MPSBuildSettings {
             includedModuleNames.add(moduleName)
         }
 
-        fun ideaPlugin(action: Action<IdeaPluginSettings>) {
+        fun ideaPlugin(action: Action<IdeaPluginSettings>): IdeaPluginSettings {
             val plugin = IdeaPluginSettings()
             ideaPlugins += plugin
             action.execute(plugin)
+            return plugin
         }
     }
 }
