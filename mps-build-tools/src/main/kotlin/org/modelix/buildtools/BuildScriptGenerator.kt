@@ -134,9 +134,13 @@ class BuildScriptGenerator(val modulesMiner: ModulesMiner,
                     addLib("lib/ant/lib/ant-mps.jar")
                     addLib("lib/log4j.jar")
                     addLib("lib/jdom.jar")
+                } else if (mpsVersion < "2021.3") {
+                    addLib("lib/ant/lib/ant-mps.jar")
+                    addLib("lib/util.jar")
                 } else {
                     addLib("lib/ant/lib/ant-mps.jar")
                     addLib("lib/util.jar")
+                    addLib("lib/3rd-party-rt.jar")
                 }
             }
             newChild("path") {
