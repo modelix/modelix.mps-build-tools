@@ -29,6 +29,7 @@ import kotlin.io.path.readLines
  * Modules packaged as an IDEA plugin containing a META-INF/plugin.xml file.
  */
 class PluginModuleOwner(path: ModulePath, val pluginId: String, val name: String?, val pluginDependencies: Set<String>) : ModuleOwner(path) {
+    val stacktrace = Thread.currentThread().stackTrace
     val libraries: MutableSet<LibraryModuleOwner> = HashSet()
 
     fun getModuleJarFolders(): List<File> {

@@ -51,8 +51,12 @@ class FoundModules {
         val pluginId = plugin.pluginId
         if (pluginId != null) {
             val existing = plugins[pluginId]
+            if (existing == plugin) return
             require(existing == null) {
-                "Duplicate plugin $pluginId in ${existing!!.path.getLocalAbsolutePath()} and ${plugin.path.getLocalAbsolutePath()}"
+                """Duplicate plugin $pluginId in ${existing!!.path.getLocalAbsolutePath()} and ${plugin.path.getLocalAbsolutePath()}
+                    | stacktrace of first:
+                    |   ${existing.stacktrace.joinToString("\n|   ")}
+                """.trimMargin()
             }
             plugins += pluginId to plugin
         }
