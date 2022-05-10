@@ -39,8 +39,6 @@ class BuildScriptGenerator(val modulesMiner: ModulesMiner,
         val xml = generateXML()
         antScriptFile.writeText(xml)
 
-        outputHandler?.let { it(xml) }
-
         val ant = ProcessExecutor()
         outputHandler?.let { ant.outputHandler = it }
         ant.exec(listOf(getAntPath(), "-f", antScriptFile.canonicalPath))
