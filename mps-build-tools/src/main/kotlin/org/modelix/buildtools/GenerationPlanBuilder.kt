@@ -15,13 +15,16 @@ package org.modelix.buildtools
 
 import kotlin.math.max
 
-class GenerationPlanBuilder(val resolver: ModuleResolver) {
+class GenerationPlanBuilder(
+    val resolver: ModuleResolver,
+    val additionalGenerationDependencies: Map<ModuleId, Set<ModuleId>>
+) {
     val plan: GenerationPlan = GenerationPlan()
     private val processedNodes: MutableSet<DependencyGraph<FoundModule, ModuleId>.DependencyNode> = HashSet()
     private val chunkIndexes: MutableMap<DependencyGraph<FoundModule, ModuleId>.DependencyNode, Int> = HashMap()
 
     fun build(modules: Iterable<FoundModule>): GeneratorDependencyGraph {
-        val dependencyGraph = GeneratorDependencyGraph(resolver)
+        val dependencyGraph = GeneratorDependencyGraph(resolver, additionalGenerationDependencies)
         dependencyGraph.load(modules)
         dependencyGraph.getRoots().forEach { build(it) }
         return dependencyGraph

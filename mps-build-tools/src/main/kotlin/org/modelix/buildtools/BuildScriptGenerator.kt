@@ -28,6 +28,7 @@ import kotlin.io.path.pathString
 class BuildScriptGenerator(val modulesMiner: ModulesMiner,
                            private val modulesToGenerate: List<ModuleId>? = null,
                            val ignoredModules: Set<ModuleId> = HashSet(),
+                           val additionalGenerationDependencies: Map<ModuleId, Set<ModuleId>> = emptyMap(),
                            val initialMacros: Macros = Macros(),
                            val buildDir: File = File(".", "build")) {
 
@@ -802,7 +803,10 @@ class BuildScriptGenerator(val modulesMiner: ModulesMiner,
     }
 
     private fun generatePlan(modulesToGenerate: List<ModuleId>, resolver: ModuleResolver): Pair<GenerationPlan, GeneratorDependencyGraph> {
-        val planBuilder = GenerationPlanBuilder(resolver)
+        val planBuilder = GenerationPlanBuilder(
+            resolver = resolver,
+            additionalGenerationDependencies = additionalGenerationDependencies
+        )
         val dependencyGraph = planBuilder.build(modulesToGenerate.mapNotNull { modulesMiner.getModules().getModules()[it] })
         return planBuilder.plan to dependencyGraph
     }

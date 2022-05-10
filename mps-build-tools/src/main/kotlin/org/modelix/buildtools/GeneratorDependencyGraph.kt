@@ -13,8 +13,14 @@
  */
 package org.modelix.buildtools
 
-class GeneratorDependencyGraph(moduleResolver: ModuleResolver) : ModuleDependencyGraph(moduleResolver) {
+class GeneratorDependencyGraph(
+    moduleResolver: ModuleResolver,
+    val additionalGenerationDependencies: Map<ModuleId, Set<ModuleId>>
+) : ModuleDependencyGraph(moduleResolver) {
     override fun getDependencies(element: FoundModule): Iterable<FoundModule> {
-        return element.getGenerationDependencies(moduleResolver)
+        val dependencies = element.getGenerationDependencies(moduleResolver)
+        val additional: List<FoundModule> = (additionalGenerationDependencies[element.moduleId] ?: emptySet())
+            .mapNotNull { moduleResolver.resolveModule(ModuleIdAndName(it, null), element, false) }
+        return dependencies + additional
     }
 }
