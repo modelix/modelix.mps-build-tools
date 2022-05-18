@@ -20,7 +20,7 @@ class PublicationDependencyGraph(
 ) : GeneratorDependencyGraph(resolver, additionalGenerationDependencies) {
 
     override fun getDependencies(element: FoundModule): Iterable<FoundModule> {
-        return (getDependencies(element) + element.getClassPathDependencies(resolver))
+        return (super.getDependencies(element) + element.getClassPathDependencies(resolver))
             //.filter { it.owner is SourceModuleOwner }
             .toSet()
     }
