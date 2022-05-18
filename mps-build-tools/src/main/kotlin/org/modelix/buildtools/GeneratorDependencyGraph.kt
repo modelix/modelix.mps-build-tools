@@ -13,7 +13,7 @@
  */
 package org.modelix.buildtools
 
-class GeneratorDependencyGraph(
+open class GeneratorDependencyGraph(
     moduleResolver: ModuleResolver,
     val additionalGenerationDependencies: Map<ModuleId, Set<ModuleId>>
 ) : ModuleDependencyGraph(moduleResolver) {

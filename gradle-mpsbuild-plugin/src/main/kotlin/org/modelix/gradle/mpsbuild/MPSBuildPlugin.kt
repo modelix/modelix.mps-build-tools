@@ -111,7 +111,7 @@ class MPSBuildPlugin : Plugin<Project> {
 
         taskBody(taskCheckConfig) {
             val resolver = ModuleResolver(generator.modulesMiner.getModules(), generator.ignoredModules)
-            val graph = PublicationDependencyGraph(resolver)
+            val graph = PublicationDependencyGraph(resolver, emptyMap())
             val publication2modules = settings.getPublications().associateWith { resolvePublicationModules(it, resolver).toSet() }
             for (modulesA in publication2modules) {
                 for (modulesB in publication2modules) {

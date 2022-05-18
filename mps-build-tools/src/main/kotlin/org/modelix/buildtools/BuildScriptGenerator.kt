@@ -534,7 +534,7 @@ class BuildScriptGenerator(val modulesMiner: ModulesMiner,
 
     fun getPublications(): List<Publication> {
         val resolver = ModuleResolver(modulesMiner.getModules(), ignoredModules, true)
-        val dependencyGraph = PublicationDependencyGraph(resolver)
+        val dependencyGraph = PublicationDependencyGraph(resolver, additionalGenerationDependencies)
         dependencyGraph.load(getModulesToGenerate().mapNotNull { modulesMiner.getModules().getModules()[it] })
         val sourceModules = dependencyGraph.getNodes().flatMap { it.modules }.filter { it.owner is SourceModuleOwner }
         val generatorModules = sourceModules.flatMap { it.owner.modules.values - it }

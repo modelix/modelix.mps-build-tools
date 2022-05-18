@@ -14,10 +14,13 @@
  */
 package org.modelix.buildtools
 
-class PublicationDependencyGraph(val resolver: ModuleResolver) : ModuleDependencyGraph(resolver) {
+class PublicationDependencyGraph(
+    val resolver: ModuleResolver,
+    additionalGenerationDependencies: Map<ModuleId, Set<ModuleId>>
+) : GeneratorDependencyGraph(resolver, additionalGenerationDependencies) {
 
     override fun getDependencies(element: FoundModule): Iterable<FoundModule> {
-        return (element.getClassPathDependencies(resolver) + element.getClassPathDependencies(resolver))
+        return (getDependencies(element) + element.getClassPathDependencies(resolver))
             //.filter { it.owner is SourceModuleOwner }
             .toSet()
     }
