@@ -218,7 +218,7 @@ class MPSBuildPlugin : Plugin<Project> {
                 val pluginModuleNames = settings.getPluginModuleNames()
                 val modulesAndStubs = dnode.modules.filter { !pluginModuleNames.contains(it.name) }
                 val stubs = modulesAndStubs.filter { it.name.startsWith("stubs#") }.toSet()
-                mavenPublications[publication]!!.pom { pom ->
+                mavenPublications[publication]?.pom { pom ->
                     pom.withXml { xml ->
                         xml.asElement().newChild("dependencies") {
                             // dependencies between own publications
