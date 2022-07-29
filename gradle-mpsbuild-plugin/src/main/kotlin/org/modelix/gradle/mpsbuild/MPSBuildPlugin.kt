@@ -552,8 +552,10 @@ class MPSBuildPlugin : Plugin<Project> {
                 }
             }
         }
-        val missingModuleNames = includedModuleNames!!.stream()
-            .filter { n: String -> !foundModuleNames.contains(n) }.sorted().collect(Collectors.toList())
+
+        val missingModuleNames = includedModuleNames?.minus(foundModuleNames)?.sorted()
+            ?: emptyList()
+
         if (missingModuleNames.isNotEmpty()) {
             throw RuntimeException("Modules not found: $missingModuleNames")
         }
