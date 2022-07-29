@@ -66,6 +66,10 @@ class ModulesMiner() {
                     }
                 }
                 "jar" -> {
+                    if (file.name == "mps-boot.jar" && file.parentFile.name == "lib") {
+                        modules.mpsHome = file.parentFile.parentFile
+                    }
+
                     if (file.name == "mps-workbench.jar" && file.parentFile.name == "lib") {
                         // This MPS plugin seems to use some old way of packaging a plugin
                         // The descriptor declares 'com.intellij' as the ID, but it's actually 'com.intellij.modules.mps'.
@@ -125,11 +129,6 @@ class ModulesMiner() {
 //                                }
 //                            }
 //                        }
-                    }
-                }
-                "vmoptions" -> {
-                    if (file.nameWithoutExtension == "mps" || file.nameWithoutExtension == "mps64") {
-                        modules.mpsHome = file.parentFile.parentFile
                     }
                 }
             }
