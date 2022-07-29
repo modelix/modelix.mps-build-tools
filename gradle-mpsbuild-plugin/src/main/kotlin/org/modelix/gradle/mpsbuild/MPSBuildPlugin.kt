@@ -546,7 +546,7 @@ class MPSBuildPlugin : Plugin<Project> {
                     foundModuleNames.add(module.name)
                 } else if (includedPaths != null) {
                     val modulePath = module.owner.path.getLocalAbsolutePath()
-                    if (includedPaths.stream().anyMatch { include: Path? -> modulePath.startsWith(include) }) {
+                    if (includedPaths.any(modulePath::startsWith)) {
                         modulesToGenerate.add(module)
                     }
                 }
