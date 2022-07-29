@@ -14,6 +14,7 @@
 package org.modelix.buildtools
 
 import java.nio.file.Path
+import java.nio.file.Paths
 import kotlin.io.path.absolutePathString
 
 class Macros(val macros: Map<String, Path> = mapOf()) {
@@ -24,6 +25,6 @@ class Macros(val macros: Map<String, Path> = mapOf()) {
         for (macro in macros) {
             path = path.replace("\${" + macro.key + "}", macro.value.absolutePathString())
         }
-        return Path.of(path).normalize()
+        return Paths.get(path).normalize()
     }
 }
