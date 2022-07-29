@@ -1,6 +1,6 @@
 plugins {
-    id("maven-publish")
-    kotlin("jvm")
+    `maven-publish`
+    `kotlin-dsl`
 }
 
 repositories {
@@ -11,17 +11,14 @@ repositories {
 dependencies {
     implementation(project(":mps-build-tools"))
     implementation("org.zeroturnaround:zt-zip:1.14")
-    implementation(gradleApi())
     testImplementation("junit:junit:4.13.2")
 }
 
-publishing {
-    publications {
-        create("gradlePlugin", MavenPublication::class.java) {
-            groupId = project.group.toString()
-            version = project.version.toString()
-            artifactId = "gradle-plugin"
-            from(components["java"])
+gradlePlugin {
+    plugins {
+        register("mpsbuildPlugin") {
+            id = project.group.toString()
+            implementationClass = "org.modelix.gradle.mpsbuild.MPSBuildPlugin"
         }
     }
 }

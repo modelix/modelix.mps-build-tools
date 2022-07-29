@@ -1,8 +1,7 @@
-
 plugins {
     kotlin("jvm")
-    id("application")
-    id("maven-publish")
+    `java-library`
+    `maven-publish`
 }
 
 dependencies {
@@ -19,7 +18,7 @@ tasks.getByName<Test>("test") {
 
 publishing {
     publications {
-        create<MavenPublication>("maven") {
+        create<MavenPublication>("buildTools") {
             groupId = project.group.toString()
             artifactId = "build-tools"
             version = project.version.toString()
