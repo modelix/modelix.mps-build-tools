@@ -213,7 +213,7 @@ class ModulesMiner() {
 
     private fun dependenciesFromModels(module: FoundModule, file: File) {
         if (file.isFile) {
-            // TODO .mpsr, .model, .mpb
+            // TODO .mpb
             if (file.extension == "mps" || file.extension == "model") {
                 FileInputStream(file).use {
                     dependenciesFromModel(it, module)
