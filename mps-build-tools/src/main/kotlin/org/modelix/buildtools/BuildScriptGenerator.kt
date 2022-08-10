@@ -336,14 +336,17 @@ class BuildScriptGenerator(val modulesMiner: ModulesMiner,
                             }
                             setAttribute("type", typeString)
                             setAttribute("uuid", sourceModule.moduleId.id)
+
+                            val deps = RuntimeDependencies.forModule(sourceModule, resolver)
+
                             newChild("dependencies") {
-                                for (dep in sourceModule.getGenerationDependencies(resolver)) {
+                                for (dep in deps.languageRuntimes) {
                                     newChild("module") {
                                         setAttribute("ref", dep.idAndName.toString())
                                         setAttribute("kind", "rt")
                                     }
                                 }
-                                for (dep in sourceModule.getClassPathDependencies(resolver)) {
+                                for (dep in deps.deploymentDependencies) {
                                     newChild("module") {
                                         setAttribute("ref", dep.idAndName.toString())
                                         setAttribute("kind", "cl")
@@ -351,7 +354,7 @@ class BuildScriptGenerator(val modulesMiner: ModulesMiner,
                                 }
                             }
                             newChild("uses") {
-                                for (lang in sourceModule.getAllUsedLanguages(resolver)) {
+                                for (lang in deps.usedLanguages) {
                                     newChild("language") {
                                         setAttribute("id", "l:${lang.moduleId}:${lang.name}")
                                     }

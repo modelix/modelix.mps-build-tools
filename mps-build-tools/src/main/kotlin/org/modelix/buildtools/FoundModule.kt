@@ -24,6 +24,8 @@ class FoundModule(val moduleId: ModuleId,
     var deploymentDescriptor: DeploymentDescriptor? = null
     private val languageOrDevkitUsedInModels: MutableSet<ModuleIdAndName> = HashSet()
 
+    fun getLanguageOrDevkitUsedInModels(): Set<ModuleIdAndName> = languageOrDevkitUsedInModels
+
     val name: String
         get() = moduleDescriptor?.name
             ?: deploymentDescriptor?.name
