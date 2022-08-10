@@ -19,9 +19,7 @@ import org.zeroturnaround.zip.ZipUtil
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
-import java.util.*
 import java.util.zip.ZipEntry
-import kotlin.collections.HashMap
 
 class ModulesMiner() {
 
@@ -76,7 +74,6 @@ class ModulesMiner() {
                         modules.addPlugin(PluginModuleOwner(origin.localModulePath(file), "com.intellij.modules.mps", "MPS Workbench", setOf()))
                     } else if (!file.nameWithoutExtension.endsWith("-src") && !file.nameWithoutExtension.endsWith("-generator")) {
                         val libraryModuleOwner = LibraryModuleOwner(origin.localModulePath(file), owner as? PluginModuleOwner)
-                        val libraryModules: MutableMap<String, FoundModule> = HashMap()
                         val jarContentVisitor = { stream: InputStream, entry: ZipEntry ->
                             when (entry.name) {
                                 "META-INF/module.xml" -> {
@@ -217,7 +214,7 @@ class ModulesMiner() {
     private fun dependenciesFromModels(module: FoundModule, file: File) {
         if (file.isFile) {
             // TODO .mpsr, .model, .mpb
-            if (file.extension == "mps") {
+            if (file.extension == "mps" || file.extension == "model") {
                 FileInputStream(file).use {
                     dependenciesFromModel(it, module)
                 }
@@ -255,27 +252,6 @@ class ModulesMiner() {
                 }
             }
         }
-
-//        val registry = doc.findTag("registry")
-//        if (registry != null) {
-//            // jetbrains.mps.lang.smodel
-//            val smodelLang = registry.childElements().find { it.getAttribute("id") == "7866978e-a0f0-4cc7-81bc-4d213d9375e1" }
-//            if (smodelLang != null) {
-//                run {
-//                    val moduleReferenceExpression = smodelLang.childElements().find { it.getAttribute("id") == "4040588429969021681" } ?: return@run
-//                    val conceptIndex = moduleReferenceExpression.getAttribute("index")
-//                    val moduleIdProperty = moduleReferenceExpression.childElements().find { it.getAttribute("id") == "4040588429969021683" } ?: return@run
-//                    val propertyIndex = moduleIdProperty.getAttribute("index")
-//                    visitMPSNodes(doc) { mpsNode ->
-//                        if (mpsNode.getAttribute("concept") != conceptIndex) return@visitMPSNodes
-//                        val property = mpsNode.childElements().find { it.tagName == "property" && it.getAttribute("role") == propertyIndex } ?: return@visitMPSNodes
-//                        val moduleId = property.getAttribute("value")
-//                        if (moduleId.isEmpty()) return@visitMPSNodes
-//                        module.addDependency(ModuleDependency(ModuleId(moduleId), DependencyType.Model, true))
-//                    }
-//                }
-//            }
-//        }
     }
 
     private fun visitMPSNodes(parent: Element, visitor: (Element)->Unit) {
