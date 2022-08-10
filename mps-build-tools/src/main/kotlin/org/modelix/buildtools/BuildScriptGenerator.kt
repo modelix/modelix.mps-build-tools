@@ -34,6 +34,7 @@ class BuildScriptGenerator(val modulesMiner: ModulesMiner,
 
     private var compileCycleIds: Map<DependencyGraph<FoundModule, ModuleId>.DependencyNode, Int> = HashMap()
     var generatorHeapSize: String = "2G"
+    var assembleDependsOnCompile: Boolean = true
     val ideaPlugins: MutableList<IdeaPlugin> = ArrayList()
 
     fun buildModules(antScriptFile: File = File.createTempFile("mps-build-script", ".xml", File(".")), outputHandler: ((String)->Unit)? = null) {
@@ -313,7 +314,9 @@ class BuildScriptGenerator(val modulesMiner: ModulesMiner,
             for (sourceModule in modulesToCompile) {
                 newChild("target") {
                     setAttribute("name", getAssembleTargetName(sourceModule))
-                    setAttribute("depends", "${getCompileTargetName(sourceModule)}, create-modules-output-dir")
+                    val effectiveDependencies =
+                        (if (assembleDependsOnCompile) listOf(getCompileTargetName(sourceModule)) else emptyList()) + "create-modules-output-dir"
+                    setAttribute("depends", effectiveDependencies.joinToString(", "))
                     newChild("mkdir") {
                         setAttribute("dir", getJarTempDir(sourceModule).absolutePath)
                     }
