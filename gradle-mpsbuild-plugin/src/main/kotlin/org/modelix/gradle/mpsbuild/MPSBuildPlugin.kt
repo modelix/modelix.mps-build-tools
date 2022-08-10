@@ -29,11 +29,13 @@ import org.modelix.buildtools.*
 import org.zeroturnaround.zip.ZipUtil
 import java.io.File
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.stream.Collectors
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import kotlin.text.uppercase
 
 class MPSBuildPlugin : Plugin<Project> {
     private val stubsPattern = Regex("stubs#([^#]+)#([^#]+)#([^#]+)")
@@ -50,25 +52,21 @@ class MPSBuildPlugin : Plugin<Project> {
     private fun newTask(name: String): Task = project.task(name)
 
     private fun newTask(name: String, body: ()->Unit): Task {
-        return project.task(name) { task ->
-            val action = Action { task: Task? ->
-                body()
-            }
-            task.actions = listOf(action)
+        return project.task(name) {
+            val action = Action<Task> { body() }
+            this.actions = listOf(action)
         }
     }
 
     private fun taskBody(task: Task, body: ()->Unit) {
-        val action = Action { task: Task? ->
-            body()
-        }
+        val action = Action<Task> { body() }
         task.actions = listOf(action)
     }
 
-    override fun apply(project_: Project) {
-        project = project_
+    override fun apply(project: Project) {
+        this.project = project
         settings = project.extensions.create("mpsBuild", MPSBuildSettings::class.java)
-        settings.setProject(project_)
+        settings.setProject(project)
 
         taskCopyDependencies = newTask("copyDependencies")
         taskGenerateAntScript = newTask("generateMpsAntScript")
@@ -76,9 +74,9 @@ class MPSBuildPlugin : Plugin<Project> {
         taskLoadPomDependencies = newTask("loadPomDependencies")
         taskPackagePublications = newTask("packageMpsPublications")
 
-        project_.afterEvaluate { project__: Project ->
+        project.afterEvaluate {
             settings.validate()
-            afterEvaluate()
+            this@MPSBuildPlugin.afterEvaluate()
         }
     }
 
@@ -204,11 +202,11 @@ class MPSBuildPlugin : Plugin<Project> {
         taskCheckConfig.dependsOn(taskGenerateAntScript)
 
         val taskAssembleMpsModules = project.tasks.create("assembleMpsModules", Exec::class.java) {
-            it.workingDir = antScriptFile.parentFile
-            it.commandLine = listOf("ant", "-f", antScriptFile.absolutePath, "assemble")
-            it.standardOutput = System.out
-            it.errorOutput = System.err
-            it.standardInput = System.`in`
+            workingDir = antScriptFile.parentFile
+            commandLine = listOf("ant", "-f", antScriptFile.absolutePath, "assemble")
+            standardOutput = System.out
+            errorOutput = System.err
+            standardInput = System.`in`
         }
         taskAssembleMpsModules.dependsOn(taskGenerateAntScript)
 
@@ -218,9 +216,9 @@ class MPSBuildPlugin : Plugin<Project> {
                 val pluginModuleNames = settings.getPluginModuleNames()
                 val modulesAndStubs = dnode.modules.filter { !pluginModuleNames.contains(it.name) }
                 val stubs = modulesAndStubs.filter { it.name.startsWith("stubs#") }.toSet()
-                mavenPublications[publication]?.pom { pom ->
-                    pom.withXml { xml ->
-                        xml.asElement().newChild("dependencies") {
+                mavenPublications[publication]?.pom {
+                    withXml {
+                        asElement().newChild("dependencies") {
                             // dependencies between own publications
                             for (dependency in dnode.getDependencies().mapNotNull(getPublication)) {
                                 newChild("dependency") {
@@ -309,9 +307,10 @@ class MPSBuildPlugin : Plugin<Project> {
 
         val mpsPublicationsConfig = project.configurations.create("mpsPublications")
         val publishing = project.extensions.findByType(PublishingExtension::class.java)
-        publishing?.publications { publications ->
+        publishing?.publications {
             for (publicationData in settings.getPublications()) {
-                publications.create("_"+ publicationData.name + "_", MavenPublication::class.java) { publication ->
+                create("_"+ publicationData.name + "_", MavenPublication::class.java) {
+                    val publication = this
                     mavenPublications[publicationData] = publication
                     publication.groupId = project.group.toString()
                     publication.artifactId = publicationData.name.toValidPublicationName()
@@ -319,19 +318,21 @@ class MPSBuildPlugin : Plugin<Project> {
 
                     val zipFile = publicationsDir.resolve("${publicationData.name}.zip")
                     val artifact = project.artifacts.add(mpsPublicationsConfig.name, zipFile) {
-                        it.type = "zip"
-                        it.builtBy(taskPackagePublications)
+                        type = "zip"
+                        builtBy(taskPackagePublications)
                     }
                     publication.artifact(artifact)
                 }
             }
-            publications.create("_all_", MavenPublication::class.java) { publication ->
+
+            create("_all_", MavenPublication::class.java) {
+                val publication = this
                 publication.groupId = project.group.toString()
                 publication.artifactId = "all"
                 publication.version = publicationsVersion
-                publication.pom { pom ->
-                    pom.withXml { xml ->
-                        xml.asElement().newChild("dependencies") {
+                publication.pom {
+                    withXml {
+                        asElement().newChild("dependencies") {
                             for (publicationData in settings.getPublications()) {
                                 newChild("dependency") {
                                     newChild("groupId", project.group.toString())
@@ -346,24 +347,24 @@ class MPSBuildPlugin : Plugin<Project> {
         }
 
         project.tasks.withType(GenerateMavenPom::class.java).matching { it.name.matches(Regex(".+_.+_.+")) }.all {
-            it.dependsOn(taskLoadPomDependencies)
+            dependsOn(taskLoadPomDependencies)
         }
 
         val repositories = publishing?.repositories ?: listOf()
         val ownArtifactNames = settings.getPublications().map { it.name.toValidPublicationName() }.toSet() + "all"
         for (repo in repositories) {
-            project.tasks.register("publishAllMpsPublicationsTo${repo.name.firstLetterUppercase()}Repository") { task ->
-                task.group = "publishing"
-                task.description = "Publishes all Maven publications created by the mpsbuild plugin"
-                task.dependsOn(project.tasks.withType(PublishToMavenRepository::class.java).matching {
+            project.tasks.register("publishAllMpsPublicationsTo${repo.name.firstLetterUppercase()}Repository") {
+                group = "publishing"
+                description = "Publishes all Maven publications created by the mpsbuild plugin"
+                dependsOn(project.tasks.withType(PublishToMavenRepository::class.java).matching {
                     it.repository == repo && ownArtifactNames.contains(it.publication.artifactId)
                 })
             }
         }
-        project.tasks.register("publishAllMpsPublications") { task ->
-            task.group = "publishing"
-            task.description = "Publishes all Maven publications created by the mpsbuild plugin"
-            task.dependsOn(project.tasks.withType(PublishToMavenRepository::class.java).matching {
+        project.tasks.register("publishAllMpsPublications") {
+            group = "publishing"
+            description = "Publishes all Maven publications created by the mpsbuild plugin"
+            dependsOn(project.tasks.withType(PublishToMavenRepository::class.java).matching {
                 ownArtifactNames.contains(it.publication.artifactId)
             })
         }
@@ -508,7 +509,7 @@ class MPSBuildPlugin : Plugin<Project> {
         }
         val mpsPath = settings.mpsHome
         if (mpsPath != null) {
-            val mpsHome = project.projectDir.toPath().resolve(Path.of(mpsPath)).normalize().toFile()
+            val mpsHome = project.projectDir.toPath().resolve(Paths.get(mpsPath)).normalize().toFile()
             if (!mpsHome.exists()) {
                 throw RuntimeException("$mpsHome doesn't exist")
             }
@@ -546,14 +547,16 @@ class MPSBuildPlugin : Plugin<Project> {
                     foundModuleNames.add(module.name)
                 } else if (includedPaths != null) {
                     val modulePath = module.owner.path.getLocalAbsolutePath()
-                    if (includedPaths.stream().anyMatch { include: Path? -> modulePath.startsWith(include) }) {
+                    if (includedPaths.any(modulePath::startsWith)) {
                         modulesToGenerate.add(module)
                     }
                 }
             }
         }
-        val missingModuleNames = includedModuleNames!!.stream()
-            .filter { n: String -> !foundModuleNames.contains(n) }.sorted().collect(Collectors.toList())
+
+        val missingModuleNames = includedModuleNames?.minus(foundModuleNames)?.sorted()
+            ?: emptyList()
+
         if (missingModuleNames.isNotEmpty()) {
             throw RuntimeException("Modules not found: $missingModuleNames")
         }
@@ -609,4 +612,4 @@ class MPSBuildPlugin : Plugin<Project> {
     }
 }
 
-private fun String.firstLetterUppercase() = if (isEmpty()) this else substring(0, 1).uppercase() + drop(1)
+private fun String.firstLetterUppercase() = if (isEmpty()) this else substring(0, 1).toUpperCase() + drop(1)

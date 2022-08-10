@@ -3,9 +3,6 @@
 /*/build
 
 # modules are configured by gradle
-.idea/modules
-
+.idea/
 .DS_Store
-.idea/uiDesigner.xml
-
 /version.txt

@@ -2,7 +2,6 @@ buildscript {
     repositories {
         /* It is useful to have the central maven repo before the Itemis's one
            as it is more reliable */
-        mavenLocal()
         maven { url = uri("https://repo.maven.apache.org/maven2") }
         maven { url = uri("https://plugins.gradle.org/m2/") }
         mavenCentral()
@@ -15,9 +14,9 @@ buildscript {
 }
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.6.10" apply false
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.6.10" apply false
-    id("maven-publish")
+    kotlin("jvm") version "1.5.31" apply false
+    kotlin("plugin.serialization") version "1.5.31" apply false
+    `maven-publish`
     id("com.palantir.git-version") version "0.13.0"
 }
 
