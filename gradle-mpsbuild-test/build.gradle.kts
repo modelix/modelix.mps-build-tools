@@ -1,3 +1,5 @@
+import org.modelix.gradle.mpsbuild.MPSBuildSettings
+
 plugins {
     kotlin("jvm") version "1.8.0"
     id("org.modelix.mpsbuild")
@@ -16,4 +18,9 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+extensions.configure<MPSBuildSettings> {
+    mpsVersion("2021.1.4")
+    search(".")
 }
