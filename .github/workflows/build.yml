@@ -20,4 +20,8 @@ jobs:
     - name: Assemble
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: ./gradlew build -PciBuild=true
+      run: ./gradlew build publishToMavenLocal -PciBuild=true
+    - name: Test MPSBuild Gradle Plugin
+      env:
+       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: gradle-mpsbuild-test/ci.sh
