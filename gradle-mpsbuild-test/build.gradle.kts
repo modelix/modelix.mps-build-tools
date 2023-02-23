@@ -1,7 +1,8 @@
 import org.modelix.gradle.mpsbuild.MPSBuildSettings
 
 plugins {
-    kotlin("jvm") version "1.8.0"
+    base
+    `maven-publish`
     id("org.modelix.mpsbuild")
 }
 
@@ -10,17 +11,17 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenLocal()
-}
-
-dependencies {
-    testImplementation(kotlin("test"))
-}
-
-tasks.test {
-    useJUnitPlatform()
+    maven { url = uri("https://artifacts.itemis.cloud/repository/maven-mps/") }
 }
 
 extensions.configure<MPSBuildSettings> {
     mpsVersion("2021.1.4")
-    search(".")
+    search("../generator-test-project")
+
+    publication("L1") {
+        module("test.org.modelix.generatortestproject.L1")
+    }
+    publication("L2") {
+        module("test.org.modelix.generatortestproject.L2")
+    }
 }

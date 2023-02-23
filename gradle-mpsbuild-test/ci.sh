@@ -3,5 +3,5 @@
 set -e
 (
   cd "$(dirname "$0")"
-  ./gradlew build
+  ./gradlew build publishToMavenLocal
 )
