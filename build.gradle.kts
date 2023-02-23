@@ -37,11 +37,15 @@ version = if (versionFile.exists()) {
     versionFile.readText().trim()
 } else {
     val gitVersion: groovy.lang.Closure<String> by extra
-    gitVersion()
+    gitVersion().let {
+        if (!project.findProperty("ciBuild")?.toString().toBoolean()) {
+            "$it-SNAPSHOT"
+        } else {
+            it
+        }
+    }.also { versionFile.writeText(it) }
 }
-if (!project.findProperty("ciBuild")?.toString().toBoolean()) {
-    version = "$version-SNAPSHOT"
-}
+
 println("Version: $version")
 
 subprojects {
