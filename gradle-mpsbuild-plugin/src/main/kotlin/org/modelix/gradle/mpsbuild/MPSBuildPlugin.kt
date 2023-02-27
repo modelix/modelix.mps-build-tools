@@ -64,6 +64,7 @@ class MPSBuildPlugin : Plugin<Project> {
             this.antFile.set(antScriptFile)
         }
         val taskCheckConfig = project.tasks.register("checkMpsbuildConfig", CheckConfig::class.java) {
+            this.dependsOn(taskGenerateAntScript)
             this.generator.set(buildScriptGenerator)
             this.settings.set(this@MPSBuildPlugin.settings)
         }
