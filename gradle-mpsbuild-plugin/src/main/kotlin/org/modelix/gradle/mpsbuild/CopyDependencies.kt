@@ -6,10 +6,12 @@ import org.gradle.api.artifacts.ResolvedConfiguration
 import org.gradle.api.artifacts.ResolvedDependency
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
+import org.gradle.kotlin.dsl.mapProperty
 import org.gradle.kotlin.dsl.property
 import org.modelix.buildtools.GraphWithCyclesVisitor
 import org.modelix.buildtools.newChild
@@ -28,7 +30,7 @@ abstract class CopyDependencies @Inject constructor(of: ObjectFactory): DefaultT
     val dependenciesConfig: Property<Configuration> = of.property()
 
     @Input
-    val folderToOwningDependency: Property<HashMap<Path, ResolvedDependency>> = of.property()
+    val folderToOwningDependency: MapProperty<Path, ResolvedDependency> = of.mapProperty()
 
     @Input
     val mpsDependenciesConfiguration: Property<Configuration> = of.property()

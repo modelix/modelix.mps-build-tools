@@ -3,10 +3,12 @@ package org.modelix.gradle.mpsbuild
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.ResolvedDependency
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
+import org.gradle.kotlin.dsl.mapProperty
 import org.gradle.kotlin.dsl.property
 import org.modelix.buildtools.DependencyGraph
 import org.modelix.buildtools.FoundModule
@@ -23,10 +25,11 @@ abstract class LoadPomDependencies @Inject constructor(of: ObjectFactory): Defau
     val settings: Property<MPSBuildSettings> = of.property()
 
     @Input
-    val publicationToDnode: Property<Map<MPSBuildSettings.PublicationSettings, DependencyGraph<FoundModule, ModuleId>.DependencyNode>> = of.property()
+    val publicationToDnode: MapProperty<MPSBuildSettings.PublicationSettings, DependencyGraph<FoundModule, ModuleId>.DependencyNode> =
+        of.mapProperty()
 
     @Input
-    val folderToOwningDependency: Property<HashMap<Path, ResolvedDependency>> = of.property()
+    val folderToOwningDependency: MapProperty<Path, ResolvedDependency> = of.mapProperty()
 
     @Input
     val publicationsVersion: Property<String> = of.property()

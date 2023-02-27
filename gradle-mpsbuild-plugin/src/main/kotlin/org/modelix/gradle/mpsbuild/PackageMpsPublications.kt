@@ -3,10 +3,12 @@ package org.modelix.gradle.mpsbuild
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.TaskAction
+import org.gradle.kotlin.dsl.mapProperty
 import org.gradle.kotlin.dsl.property
 import org.modelix.buildtools.*
 import java.io.File
@@ -30,7 +32,8 @@ abstract class PackageMpsPublications @Inject constructor(of: ObjectFactory): De
     val publicationsVersion: Property<String> = of.property()
 
     @Input
-    val publication2dnode: Property<Map<MPSBuildSettings.PublicationSettings, DependencyGraph<FoundModule, ModuleId>.DependencyNode>> = of.property()
+    val publication2dnode: MapProperty<MPSBuildSettings.PublicationSettings, DependencyGraph<FoundModule, ModuleId>.DependencyNode> =
+        of.mapProperty()
 
     @TaskAction
     fun execute() {
