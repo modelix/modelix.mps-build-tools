@@ -6,13 +6,10 @@ import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.mapProperty
 import org.gradle.kotlin.dsl.property
 import org.modelix.buildtools.*
-import java.util.ArrayList
-import java.util.HashSet
 import javax.inject.Inject
 
 abstract class CheckConfig @Inject constructor(of: ObjectFactory): DefaultTask() {
@@ -23,13 +20,11 @@ abstract class CheckConfig @Inject constructor(of: ObjectFactory): DefaultTask()
     @Input
     val settings: Property<MPSBuildSettings> = of.property(MPSBuildSettings::class.java)
 
-    @Input
-    @Optional
+    @Internal
     val publication2dnode: MapProperty<MPSBuildSettings.PublicationSettings, DependencyGraph<FoundModule, ModuleId>.DependencyNode> =
         of.mapProperty()
 
-    @Input
-    @Optional
+    @Internal
     val getPublication: Property<(DependencyGraph<FoundModule, ModuleId>.DependencyNode)->MPSBuildSettings.PublicationSettings?> = of.property()
 
     @TaskAction
