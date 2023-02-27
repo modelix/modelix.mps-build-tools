@@ -6,12 +6,13 @@ import org.gradle.api.artifacts.ResolvedConfiguration
 import org.gradle.api.artifacts.ResolvedDependency
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
-import org.gradle.kotlin.dsl.mapProperty
 import org.gradle.kotlin.dsl.property
 import org.modelix.buildtools.GraphWithCyclesVisitor
 import org.modelix.buildtools.newChild
@@ -30,24 +31,29 @@ abstract class CopyDependencies @Inject constructor(of: ObjectFactory): DefaultT
     val dependenciesConfig: Property<Configuration> = of.property()
 
     @Input
-    val folderToOwningDependency: MapProperty<Path, ResolvedDependency> = of.mapProperty()
+    @Optional
+    val mpsDependenciesConfig: Property<Configuration> = of.property()
 
     @Input
-    val mpsDependenciesConfiguration: Property<Configuration> = of.property()
-
-    @Input
+    @Optional
     val mpsDownloadUrl: Property<URL> = of.property()
 
     @OutputDirectory
     val dependenciesTargetDir: DirectoryProperty = of.directoryProperty()
 
-    @OutputDirectory
-    val mpsDir: DirectoryProperty = of.directoryProperty()
+    @InputDirectory
+    val targetDir: DirectoryProperty = of.directoryProperty()
+
+    @get:Internal
+    abstract var mpsDir: File?
+
+    @Internal
+    val folderToOwningDependency: MutableMap<Path, ResolvedDependency> = mutableMapOf()
 
     @TaskAction
     fun execute() {
         copyDependencies(dependenciesConfig.get(), dependenciesTargetDir.asFile.get())
-        mpsDir.set(downloadMps(mpsDependenciesConfiguration.get(), mpsDir.asFile.get()))
+        mpsDir = downloadMps(mpsDependenciesConfig.orNull, targetDir.asFile.get())
     }
 
     private fun copyDependencies(dependenciesConfiguration: Configuration, targetFolder: File) {
@@ -71,7 +77,7 @@ abstract class CopyDependencies @Inject constructor(of: ObjectFactory): DefaultT
                     .resolve(dependency.moduleGroup)
                     .resolve(dependency.moduleName)
                 //.resolve(file.name)
-                folderToOwningDependency.get()[targetFile.absoluteFile.toPath().normalize()] = dependency
+                folderToOwningDependency[targetFile.absoluteFile.toPath().normalize()] = dependency
                 copyAndUnzip(file, targetFile)
             }
             else -> println("Ignored file $file from dependency ${dependency.module.id}")
@@ -158,9 +164,9 @@ abstract class CopyDependencies @Inject constructor(of: ObjectFactory): DefaultT
         solutionFile.writeText(xmlToString(xml))
     }
 
-    private fun downloadMps(mpsDependenciesConfig: Configuration, targetDir: File): File? {
+    private fun downloadMps(mpsDependenciesConfig: Configuration?, targetDir: File): File {
         var mpsDir: File? = null
-        mpsDependenciesConfig.resolvedConfiguration.lenientConfiguration.let {
+        mpsDependenciesConfig?.resolvedConfiguration?.lenientConfiguration?.let {
             for (file in it.files) {
                 val targetFile = targetDir.resolve(file.name)
                 if (!targetFile.exists()) {
@@ -171,24 +177,25 @@ abstract class CopyDependencies @Inject constructor(of: ObjectFactory): DefaultT
         }
 
         if (mpsDir == null) {
-            val url = mpsDownloadUrl.get()
-            val file = targetDir.resolve(url.toString().substringAfterLast("/"))
-            if (!file.exists()) {
-                println("Downloading $url")
-                file.parentFile.mkdirs()
-                url.openStream().use { istream ->
-                    file.outputStream().use { ostream ->
-                        istream.copyTo(ostream)
+            if (mpsDownloadUrl.isPresent) {
+                val url = mpsDownloadUrl.get()
+                val file = targetDir.resolve(url.toString().substringAfterLast("/"))
+                if (!file.exists()) {
+                    println("Downloading $url")
+                    file.parentFile.mkdirs()
+                    url.openStream().use { istream ->
+                        file.outputStream().use { ostream ->
+                            istream.copyTo(ostream)
+                        }
                     }
                 }
+                if (file.isFile) {
+                    ZipUtil.explode(file)
+                }
+                mpsDir = file
             }
-            if (file.isFile) {
-                ZipUtil.explode(file)
-            }
-            mpsDir = file
         }
-
-        return mpsDir
+        return mpsDir ?: targetDir
     }
 
 }

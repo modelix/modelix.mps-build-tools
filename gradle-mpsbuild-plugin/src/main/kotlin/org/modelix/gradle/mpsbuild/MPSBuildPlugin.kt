@@ -15,7 +15,6 @@ package org.modelix.gradle.mpsbuild
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.artifacts.ResolvedDependency
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.tasks.GenerateMavenPom
@@ -24,7 +23,6 @@ import org.gradle.api.tasks.Exec
 import org.gradle.api.tasks.TaskProvider
 import org.modelix.buildtools.*
 import java.io.File
-import java.nio.file.Path
 import java.nio.file.Paths
 import java.text.SimpleDateFormat
 import java.util.*
@@ -47,15 +45,15 @@ class MPSBuildPlugin : Plugin<Project> {
         publicationsDir = buildDir.resolve("publications")
         antScriptFile = File(buildDir, "build-modules.xml")
 
-        val folder2owningDependency = HashMap<Path, ResolvedDependency>()
         val taskCopyDependencies = project.tasks.register("copyDependencies", CopyDependencies::class.java) {
             settings.getTaskDependencies().forEach { this.dependsOn(it) }
             this.dependenciesConfig.set(settings.dependenciesConfig)
+            this.mpsDependenciesConfig.set(settings.mpsDependenciesConfig)
+            this.mpsDownloadUrl.set(settings.getMpsDownloadUrl())
             this.dependenciesTargetDir.set(dependenciesDir.normalize())
-            this.folderToOwningDependency.set(folder2owningDependency)
-            this.mpsDir.set(buildDir.resolve("mps"))
+            this.targetDir.set(buildDir.resolve("mps"))
         }
-        val dirsToMine = setOfNotNull(dependenciesDir, taskCopyDependencies.get().mpsDir.asFile.get())
+        val dirsToMine = setOfNotNull(dependenciesDir, taskCopyDependencies.get().mpsDir)
         val buildScriptGenerator = createBuildScriptGenerator(settings, project, buildDir, dirsToMine)
 
         val taskGenerateAntScript = project.tasks.register("generateMpsAntScript", GenerateAntScript::class.java) {
@@ -72,7 +70,7 @@ class MPSBuildPlugin : Plugin<Project> {
             this.dependsOn(taskCheckConfig)
             this.settings.set(this@MPSBuildPlugin.settings)
             this.publicationToDnode.set(taskCheckConfig.get().publication2dnode)
-            this.folderToOwningDependency.set(folder2owningDependency)
+            this.folderToOwningDependency.set(taskCopyDependencies.get().folderToOwningDependency)
             this.publicationsVersion.set(getPublicationsVersion())
             this.getPublication.set(taskCheckConfig.get().getPublication)
         }
