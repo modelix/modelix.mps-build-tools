@@ -45,6 +45,8 @@ class MPSBuildPlugin : Plugin<Project> {
         publicationsDir = buildDir.resolve("publications")
         antScriptFile = File(buildDir, "build-modules.xml")
 
+        var generator: BuildScriptGenerator? = null
+
         val taskCopyDependencies = project.tasks.register("copyDependencies", CopyDependencies::class.java) {
             settings.getTaskDependencies().forEach { this.dependsOn(it) }
             this.dependenciesConfig.set(settings.dependenciesConfig)
@@ -52,18 +54,24 @@ class MPSBuildPlugin : Plugin<Project> {
             this.mpsDownloadUrl.set(settings.getMpsDownloadUrl())
             this.dependenciesTargetDir.set(dependenciesDir.normalize())
             this.targetDir.set(buildDir.resolve("mps"))
+            doLast {
+                val dirsToMine = setOfNotNull(dependenciesDir, this@register.mpsDir)
+                generator = createBuildScriptGenerator(settings, project, buildDir, dirsToMine)
+            }
         }
-        val dirsToMine = setOfNotNull(dependenciesDir, taskCopyDependencies.get().mpsDir)
-        val buildScriptGenerator = createBuildScriptGenerator(settings, project, buildDir, dirsToMine)
 
         val taskGenerateAntScript = project.tasks.register("generateMpsAntScript", GenerateAntScript::class.java) {
             this.dependsOn(taskCopyDependencies)
-            this.generator.set(buildScriptGenerator)
+            doFirst {
+                this@register.generator.set(generator)
+            }
             this.antFile.set(antScriptFile)
         }
         val taskCheckConfig = project.tasks.register("checkMpsbuildConfig", CheckConfig::class.java) {
             this.dependsOn(taskGenerateAntScript)
-            this.generator.set(buildScriptGenerator)
+            doFirst {
+                this@register.generator.set(generator)
+            }
             this.settings.set(this@MPSBuildPlugin.settings)
         }
         val taskLoadPomDependencies = project.tasks.register("loadPomDependencies", LoadPomDependencies::class.java) {
@@ -88,8 +96,10 @@ class MPSBuildPlugin : Plugin<Project> {
             this.dependsOn(taskCheckConfig)
             this.dependsOn(taskLoadPomDependencies)
             this.dependsOn(taskAssembleMpsModules)
+            doFirst {
+                this@register.generator.set(generator)
+            }
             this.publicationsDir.set(this@MPSBuildPlugin.publicationsDir)
-            this.generator.set(buildScriptGenerator)
             this.settings.set(this@MPSBuildPlugin.settings)
             this.publicationsVersion.set(getPublicationsVersion())
             this.publication2dnode.set(taskLoadPomDependencies.get().publicationToDnode)

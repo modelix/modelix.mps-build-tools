@@ -7,6 +7,7 @@ import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.mapProperty
 import org.gradle.kotlin.dsl.property
@@ -22,7 +23,7 @@ abstract class PackageMpsPublications @Inject constructor(of: ObjectFactory): De
     @InputDirectory
     val publicationsDir: DirectoryProperty = of.directoryProperty()
 
-    @Input
+    @Internal
     val generator: Property<BuildScriptGenerator> = of.property()
 
     @Input

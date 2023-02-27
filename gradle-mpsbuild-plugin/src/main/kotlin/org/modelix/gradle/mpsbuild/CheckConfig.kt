@@ -5,6 +5,7 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.mapProperty
@@ -16,7 +17,7 @@ import javax.inject.Inject
 
 abstract class CheckConfig @Inject constructor(of: ObjectFactory): DefaultTask() {
 
-    @Input
+    @Internal
     val generator: Property<BuildScriptGenerator> = of.property(BuildScriptGenerator::class.java)
 
     @Input

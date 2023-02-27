@@ -12,6 +12,7 @@ import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.property
 import org.modelix.buildtools.GraphWithCyclesVisitor
@@ -44,8 +45,9 @@ abstract class CopyDependencies @Inject constructor(of: ObjectFactory): DefaultT
     @InputDirectory
     val targetDir: DirectoryProperty = of.directoryProperty()
 
-    @get:Internal
-    abstract var mpsDir: File?
+    @OutputFile
+    @Optional
+    var mpsDir: File? = null
 
     @Internal
     val folderToOwningDependency: MutableMap<Path, ResolvedDependency> = mutableMapOf()
