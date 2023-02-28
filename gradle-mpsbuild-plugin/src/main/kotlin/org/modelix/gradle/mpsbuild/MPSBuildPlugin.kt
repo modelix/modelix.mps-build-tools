@@ -35,6 +35,7 @@ class MPSBuildPlugin : Plugin<Project> {
     private lateinit var publicationsDir: File
     private lateinit var dependenciesDir: File
     private lateinit var antScriptFile: File
+    private var generator: BuildScriptGenerator? = null
 
     override fun apply(project: Project) {
         this.project = project
@@ -45,15 +46,13 @@ class MPSBuildPlugin : Plugin<Project> {
         publicationsDir = buildDir.resolve("publications")
         antScriptFile = File(buildDir, "build-modules.xml")
 
-        var generator: BuildScriptGenerator? = null
-
         val taskCopyDependencies = project.tasks.register("copyDependencies", CopyDependencies::class.java) {
-            settings.getTaskDependencies().forEach { this.dependsOn(it) }
-            this.dependenciesConfig.set(settings.dependenciesConfig)
-            this.mpsDependenciesConfig.set(settings.mpsDependenciesConfig)
-            this.mpsDownloadUrl.set(settings.getMpsDownloadUrl())
-            this.dependenciesTargetDir.set(dependenciesDir.normalize())
-            this.targetDir.set(buildDir.resolve("mps"))
+            settings.getTaskDependencies().forEach { dependsOn(it) }
+            dependenciesConfig.set(settings.dependenciesConfig)
+            mpsDependenciesConfig.set(settings.mpsDependenciesConfig)
+            mpsDownloadUrl.set(settings.getMpsDownloadUrl())
+            dependenciesTargetDir.set(dependenciesDir.normalize())
+            targetDir.set(buildDir.resolve("mps"))
             doLast {
                 val dirsToMine = setOfNotNull(dependenciesDir, this@register.mpsDir)
                 generator = createBuildScriptGenerator(settings, project, buildDir, dirsToMine)
@@ -61,30 +60,30 @@ class MPSBuildPlugin : Plugin<Project> {
         }
 
         val taskGenerateAntScript = project.tasks.register("generateMpsAntScript", GenerateAntScript::class.java) {
-            this.dependsOn(taskCopyDependencies)
+            dependsOn(taskCopyDependencies)
             doFirst {
-                this@register.generator.set(generator)
+                generator.set(this@MPSBuildPlugin.generator)
             }
-            this.antFile.set(antScriptFile)
+            antFile.set(antScriptFile)
         }
         val taskCheckConfig = project.tasks.register("checkMpsbuildConfig", CheckConfig::class.java) {
-            this.dependsOn(taskGenerateAntScript)
+            dependsOn(taskGenerateAntScript)
             doFirst {
-                this@register.generator.set(generator)
+                generator.set(this@MPSBuildPlugin.generator)
             }
             this.settings.set(this@MPSBuildPlugin.settings)
         }
         val taskLoadPomDependencies = project.tasks.register("loadPomDependencies", LoadPomDependencies::class.java) {
-            this.dependsOn(taskCheckConfig)
-            this.settings.set(this@MPSBuildPlugin.settings)
-            this.publicationToDnode.set(taskCheckConfig.get().publication2dnode)
-            this.folderToOwningDependency.set(taskCopyDependencies.get().folderToOwningDependency)
-            this.publicationsVersion.set(getPublicationsVersion())
-            this.getPublication.set(taskCheckConfig.get().getPublication)
+            dependsOn(taskCheckConfig)
+            settings.set(this@MPSBuildPlugin.settings)
+            publicationToDnode.set(taskCheckConfig.get().publication2dnode)
+            folderToOwningDependency.set(taskCopyDependencies.get().folderToOwningDependency)
+            publicationsVersion.set(getPublicationsVersion())
+            getPublication.set(taskCheckConfig.get().getPublication)
         }
         val taskAssembleMpsModules = project.tasks.register("assembleMpsModules", Exec::class.java) {
-            this.dependsOn(taskGenerateAntScript)
-            this.mustRunAfter(taskCheckConfig) // fail fast
+            dependsOn(taskGenerateAntScript)
+            mustRunAfter(taskCheckConfig) // fail fast
             workingDir = antScriptFile.parentFile
             commandLine = listOf("ant", "-f", antScriptFile.absolutePath, "assemble")
             standardOutput = System.out
@@ -93,16 +92,16 @@ class MPSBuildPlugin : Plugin<Project> {
         }
 
         val taskPackagePublications = project.tasks.register("packageMpsPublications", PackageMpsPublications::class.java) {
-            this.dependsOn(taskCheckConfig)
-            this.dependsOn(taskLoadPomDependencies)
-            this.dependsOn(taskAssembleMpsModules)
+            dependsOn(taskCheckConfig)
+            dependsOn(taskLoadPomDependencies)
+            dependsOn(taskAssembleMpsModules)
             doFirst {
-                this@register.generator.set(generator)
+                generator.set(this@MPSBuildPlugin.generator)
             }
-            this.publicationsDir.set(this@MPSBuildPlugin.publicationsDir)
-            this.settings.set(this@MPSBuildPlugin.settings)
-            this.publicationsVersion.set(getPublicationsVersion())
-            this.publication2dnode.set(taskLoadPomDependencies.get().publicationToDnode)
+            publicationsDir.set(this@MPSBuildPlugin.publicationsDir)
+            settings.set(this@MPSBuildPlugin.settings)
+            publicationsVersion.set(getPublicationsVersion())
+            publication2dnode.set(taskLoadPomDependencies.get().publicationToDnode)
         }
         project.tasks.withType(GenerateMavenPom::class.java).matching { it.name.matches(Regex(".+_.+_.+")) }.all {
             dependsOn(taskLoadPomDependencies)

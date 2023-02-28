@@ -7,13 +7,7 @@ import org.gradle.api.artifacts.ResolvedDependency
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 import org.gradle.kotlin.dsl.property
 import org.modelix.buildtools.GraphWithCyclesVisitor
 import org.modelix.buildtools.newChild
@@ -23,7 +17,6 @@ import org.zeroturnaround.zip.ZipUtil
 import java.io.File
 import java.net.URL
 import java.nio.file.Path
-import java.util.ArrayList
 import javax.inject.Inject
 
 abstract class CopyDependencies @Inject constructor(of: ObjectFactory): DefaultTask() {
@@ -42,7 +35,7 @@ abstract class CopyDependencies @Inject constructor(of: ObjectFactory): DefaultT
     @OutputDirectory
     val dependenciesTargetDir: DirectoryProperty = of.directoryProperty()
 
-    @InputDirectory
+    @Internal
     val targetDir: DirectoryProperty = of.directoryProperty()
 
     @OutputFile
