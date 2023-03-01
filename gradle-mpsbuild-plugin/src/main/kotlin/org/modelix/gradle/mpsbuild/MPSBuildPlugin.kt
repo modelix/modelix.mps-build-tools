@@ -21,9 +21,9 @@ import org.gradle.api.publish.maven.tasks.GenerateMavenPom
 import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
 import org.gradle.api.tasks.Exec
 import org.gradle.api.tasks.TaskProvider
-import org.modelix.buildtools.*
+import org.modelix.buildtools.BuildScriptGenerator
+import org.modelix.buildtools.newChild
 import java.io.File
-import java.nio.file.Paths
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -36,6 +36,7 @@ class MPSBuildPlugin : Plugin<Project> {
     private lateinit var dependenciesDir: File
     private lateinit var antScriptFile: File
     private var generator: BuildScriptGenerator? = null
+    private var dirsToMine: Set<File> = setOf()
 
     override fun apply(project: Project) {
         this.project = project
@@ -54,16 +55,14 @@ class MPSBuildPlugin : Plugin<Project> {
             dependenciesTargetDir.set(dependenciesDir.normalize())
             targetDir.set(buildDir.resolve("mps"))
             doLast {
-                val dirsToMine = setOfNotNull(dependenciesDir, this@register.mpsDir)
-                generator = createBuildScriptGenerator(settings, project, buildDir, dirsToMine)
+                dirsToMine = setOfNotNull(dependenciesDir, this@register.mpsDir)
             }
         }
 
         val taskGenerateAntScript = project.tasks.register("generateMpsAntScript", GenerateAntScript::class.java) {
             dependsOn(taskCopyDependencies)
-            doFirst {
-                generator.set(this@MPSBuildPlugin.generator)
-            }
+            settings.set(this@MPSBuildPlugin.settings)
+            dirsToMine.set(this@MPSBuildPlugin.dirsToMine)
             antFile.set(antScriptFile)
         }
         val taskCheckConfig = project.tasks.register("checkMpsbuildConfig", CheckConfig::class.java) {
@@ -192,72 +191,7 @@ class MPSBuildPlugin : Plugin<Project> {
 
     private fun String.toValidPublicationName() = replace(Regex("[^A-Za-z0-9_\\-.]"), "_").toLowerCase()
 
-    private fun createBuildScriptGenerator(settings: MPSBuildSettings,
-                                           project: Project,
-                                           buildDir: File,
-                                           dependencyFiles: Set<File>): BuildScriptGenerator {
-        val modulesMiner = ModulesMiner()
-        for (modulePath in settings.resolveModulePaths(project.projectDir.toPath())) {
-            modulesMiner.searchInFolder(modulePath.toFile())
-        }
-        for (dependencyFile in dependencyFiles) {
-            modulesMiner.searchInFolder(dependencyFile)
-        }
-        val mpsPath = settings.mpsHome
-        if (mpsPath != null) {
-            val mpsHome = project.projectDir.toPath().resolve(Paths.get(mpsPath)).normalize().toFile()
-            if (!mpsHome.exists()) {
-                throw RuntimeException("$mpsHome doesn't exist")
-            }
-            modulesMiner.searchInFolder(mpsHome)
-        }
-        val resolver = ModuleResolver(modulesMiner.getModules(), emptySet())
-        val modulesToGenerate = settings.getPublications()
-            .flatMap { resolvePublicationModules(it, resolver) }.map { it.moduleId }
-        val generator = BuildScriptGenerator(
-            modulesMiner = modulesMiner,
-            modulesToGenerate = modulesToGenerate,
-            ignoredModules = emptySet(),
-            initialMacros = settings.getMacros(project.projectDir.toPath()),
-            buildDir = buildDir
-        )
-        generator.generatorHeapSize = settings.generatorHeapSize
-        generator.ideaPlugins += settings.getPublications().flatMap { it.ideaPlugins }.map { pluginSettings ->
-            val moduleName = pluginSettings.getImplementationModuleName()
-            val module = (modulesMiner.getModules().getModules().values.find { it.name == moduleName }
-                ?: throw RuntimeException("module $moduleName not found"))
-            BuildScriptGenerator.IdeaPlugin(module, "" + project.version, pluginSettings.pluginXml)
-        }
-        return generator
-    }
 
-    private fun resolvePublicationModules(publication: MPSBuildSettings.PublicationSettings, resolver: ModuleResolver): List<FoundModule> {
-        val modulesToGenerate: MutableList<FoundModule> = ArrayList()
-        val includedPaths = publication.resolveIncludedModules(project.projectDir.toPath())
-        val includedModuleNames = publication.getIncludedModuleNames()
-        val foundModuleNames: MutableSet<String> = HashSet()
-        if (includedPaths != null || includedModuleNames != null) {
-            for (module in resolver.availableModules.getModules().values) {
-                if (includedModuleNames != null && includedModuleNames.contains(module.name)) {
-                    modulesToGenerate.add(module)
-                    foundModuleNames.add(module.name)
-                } else if (includedPaths != null) {
-                    val modulePath = module.owner.path.getLocalAbsolutePath()
-                    if (includedPaths.any(modulePath::startsWith)) {
-                        modulesToGenerate.add(module)
-                    }
-                }
-            }
-        }
-
-        val missingModuleNames = includedModuleNames?.minus(foundModuleNames)?.sorted()
-            ?: emptyList()
-
-        if (missingModuleNames.isNotEmpty()) {
-            throw RuntimeException("Modules not found: $missingModuleNames")
-        }
-        return modulesToGenerate
-    }
 }
 
 private fun String.firstLetterUppercase() = if (isEmpty()) this else substring(0, 1).toUpperCase() + drop(1)

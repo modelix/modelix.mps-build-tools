@@ -19,11 +19,12 @@ import org.gradle.api.artifacts.Configuration
 import org.modelix.buildtools.Macros
 import org.modelix.buildtools.readXmlFile
 import org.w3c.dom.Document
+import java.io.Serializable
 import java.net.URL
 import java.nio.file.Path
 import java.util.stream.Collectors
 
-open class MPSBuildSettings {
+open class MPSBuildSettings : Serializable {
     private val mpsVersionPattern = Regex("(\\d+\\.\\d+)(\\.\\d+)?")
     private lateinit var project: Project
     lateinit var dependenciesConfig: Configuration
