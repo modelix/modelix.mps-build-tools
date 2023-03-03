@@ -21,10 +21,10 @@ import javax.inject.Inject
 
 abstract class CopyDependencies @Inject constructor(of: ObjectFactory): DefaultTask() {
 
-    @Input
+    @InputFiles
     val dependenciesConfig: Property<Configuration> = of.property()
 
-    @Input
+    @InputFiles
     @Optional
     val mpsDependenciesConfig: Property<Configuration> = of.property()
 
