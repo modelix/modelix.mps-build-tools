@@ -24,7 +24,7 @@ import java.net.URL
 import java.nio.file.Path
 import java.util.stream.Collectors
 
-open class MPSBuildSettings : Serializable {
+open class MPSBuildSettings {
     private val mpsVersionPattern = Regex("(\\d+\\.\\d+)(\\.\\d+)?")
     private lateinit var project: Project
     lateinit var dependenciesConfig: Configuration
@@ -143,53 +143,56 @@ open class MPSBuildSettings : Serializable {
         action.execute(publication)
         return publication
     }
+}
 
-    inner class IdeaPluginSettings {
-        private var implementationModule: String? = null
-        var description: String? = null
-        var pluginXml: Document? = null
-        fun getImplementationModuleName() = implementationModule
-            ?: throw RuntimeException("No implementation module specified for the IDEA plugin")
-        fun implementationModule(name: String) {
-            require(implementationModule == null) {
-                "Only one implementation module is supported. It's already set to $implementationModule"
-            }
-            implementationModule = name
+class IdeaPluginSettings : Serializable {
+    private var implementationModule: String? = null
+    var description: String? = null
+    var content: String? = null
+    @Transient
+    var pluginXml: Document? = null
+    fun getImplementationModuleName() = implementationModule
+        ?: throw RuntimeException("No implementation module specified for the IDEA plugin")
+    fun implementationModule(name: String) {
+        require(implementationModule == null) {
+            "Only one implementation module is supported. It's already set to $implementationModule"
         }
-        fun description(value: String) {
-            description = value
-        }
-        fun pluginXml(content: String) {
-            pluginXml = readXmlFile(content.byteInputStream())
-        }
+        implementationModule = name
+    }
+    fun description(value: String) {
+        description = value
+    }
+    fun pluginXml(content: String) {
+        this.content = content
+        pluginXml = readXmlFile(content.byteInputStream())
+    }
+}
+
+class PublicationSettings(val name: String) : Serializable {
+    private val includedPaths: MutableList<String> = ArrayList()
+    private val includedModuleNames: MutableSet<String> = HashSet()
+    val ideaPlugins: MutableList<IdeaPluginSettings> = ArrayList()
+
+    fun includePath(pathToInclude: String) {
+        includedPaths.add(pathToInclude)
     }
 
-    inner class PublicationSettings(val name: String) {
-        private val includedPaths: MutableList<String> = ArrayList()
-        private val includedModuleNames: MutableSet<String> = HashSet()
-        val ideaPlugins: MutableList<IdeaPluginSettings> = ArrayList()
+    fun resolveIncludedModules(workdir: Path): List<Path>? {
+        return if (includedPaths.isEmpty()) null else includedPaths.stream().map { path: String? -> workdir.resolve(path).toAbsolutePath().normalize() }.distinct().collect(Collectors.toList())
+    }
 
-        fun includePath(pathToInclude: String) {
-            includedPaths.add(pathToInclude)
-        }
+    fun getIncludedModuleNames(): Set<String>? {
+        return if (includedModuleNames.isEmpty()) null else includedModuleNames
+    }
 
-        fun resolveIncludedModules(workdir: Path): List<Path>? {
-            return if (includedPaths.isEmpty()) null else includedPaths.stream().map { path: String? -> workdir.resolve(path).toAbsolutePath().normalize() }.distinct().collect(Collectors.toList())
-        }
+    fun module(moduleName: String) {
+        includedModuleNames.add(moduleName)
+    }
 
-        fun getIncludedModuleNames(): Set<String>? {
-            return if (includedModuleNames.isEmpty()) null else includedModuleNames
-        }
-
-        fun module(moduleName: String) {
-            includedModuleNames.add(moduleName)
-        }
-
-        fun ideaPlugin(action: Action<IdeaPluginSettings>): IdeaPluginSettings {
-            val plugin = IdeaPluginSettings()
-            ideaPlugins += plugin
-            action.execute(plugin)
-            return plugin
-        }
+    fun ideaPlugin(action: Action<IdeaPluginSettings>): IdeaPluginSettings {
+        val plugin = IdeaPluginSettings()
+        ideaPlugins += plugin
+        action.execute(plugin)
+        return plugin
     }
 }

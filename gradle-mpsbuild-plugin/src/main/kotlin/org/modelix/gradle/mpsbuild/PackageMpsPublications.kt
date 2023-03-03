@@ -32,7 +32,7 @@ abstract class PackageMpsPublications @Inject constructor(of: ObjectFactory): De
     val publicationsVersion: Property<String> = of.property()
 
     @Input
-    val publication2dnode: MapProperty<MPSBuildSettings.PublicationSettings, DependencyGraph<FoundModule, ModuleId>.DependencyNode> =
+    val publication2dnode: MapProperty<PublicationSettings, DependencyGraph<FoundModule, ModuleId>.DependencyNode> =
         of.mapProperty()
 
     @TaskAction

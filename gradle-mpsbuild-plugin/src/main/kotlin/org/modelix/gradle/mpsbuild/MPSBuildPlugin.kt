@@ -61,8 +61,14 @@ class MPSBuildPlugin : Plugin<Project> {
 
         val taskGenerateAntScript = project.tasks.register("generateMpsAntScript", GenerateAntScript::class.java) {
             dependsOn(taskCopyDependencies)
-            settings.set(this@MPSBuildPlugin.settings)
-            dirsToMine.set(this@MPSBuildPlugin.dirsToMine)
+            generatorSettings.set(GeneratorSettings(
+                settings.mpsHome,
+                settings.resolveModulePaths(project.projectDir.toPath()).map { it.toString() },
+                settings.generatorHeapSize,
+                settings.getPublications(),
+                settings.getMacros(project.projectDir.toPath()),
+                buildDir))
+            dependencyFiles.set(this@MPSBuildPlugin.dirsToMine)
             antFile.set(antScriptFile)
         }
         val taskCheckConfig = project.tasks.register("checkMpsbuildConfig", CheckConfig::class.java) {
@@ -113,7 +119,7 @@ class MPSBuildPlugin : Plugin<Project> {
 
     private fun afterEvaluate(taskPackagePublications: TaskProvider<PackageMpsPublications>) {
         val publicationsVersion = getPublicationsVersion()
-        val mavenPublications = HashMap<MPSBuildSettings.PublicationSettings, MavenPublication>()
+        val mavenPublications = HashMap<PublicationSettings, MavenPublication>()
 
         val mpsPublicationsConfig = project.configurations.create("mpsPublications")
         val publishing = project.extensions.findByType(PublishingExtension::class.java)

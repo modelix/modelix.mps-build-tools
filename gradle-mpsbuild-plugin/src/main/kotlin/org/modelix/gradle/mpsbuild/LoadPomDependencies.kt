@@ -25,7 +25,7 @@ abstract class LoadPomDependencies @Inject constructor(of: ObjectFactory): Defau
     val settings: Property<MPSBuildSettings> = of.property()
 
     @Input
-    val publicationToDnode: MapProperty<MPSBuildSettings.PublicationSettings, DependencyGraph<FoundModule, ModuleId>.DependencyNode> =
+    val publicationToDnode: MapProperty<PublicationSettings, DependencyGraph<FoundModule, ModuleId>.DependencyNode> =
         of.mapProperty()
 
     @Input
@@ -35,10 +35,10 @@ abstract class LoadPomDependencies @Inject constructor(of: ObjectFactory): Defau
     val publicationsVersion: Property<String> = of.property()
 
     @Input
-    val getPublication: Property<(DependencyGraph<FoundModule, ModuleId>.DependencyNode)->MPSBuildSettings.PublicationSettings?> = of.property()
+    val getPublication: Property<(DependencyGraph<FoundModule, ModuleId>.DependencyNode)->PublicationSettings?> = of.property()
 
     @Input
-    val mavenPublications = HashMap<MPSBuildSettings.PublicationSettings, MavenPublication>()
+    val mavenPublications = HashMap<PublicationSettings, MavenPublication>()
 
     @TaskAction
     fun load() {

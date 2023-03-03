@@ -21,11 +21,11 @@ abstract class CheckConfig @Inject constructor(of: ObjectFactory): DefaultTask()
     val settings: Property<MPSBuildSettings> = of.property(MPSBuildSettings::class.java)
 
     @Internal
-    val publication2dnode: MapProperty<MPSBuildSettings.PublicationSettings, DependencyGraph<FoundModule, ModuleId>.DependencyNode> =
+    val publication2dnode: MapProperty<PublicationSettings, DependencyGraph<FoundModule, ModuleId>.DependencyNode> =
         of.mapProperty()
 
     @Internal
-    val getPublication: Property<(DependencyGraph<FoundModule, ModuleId>.DependencyNode)->MPSBuildSettings.PublicationSettings?> = of.property()
+    val getPublication: Property<(DependencyGraph<FoundModule, ModuleId>.DependencyNode)->PublicationSettings?> = of.property()
 
     @TaskAction
     fun check() {
@@ -50,12 +50,12 @@ abstract class CheckConfig @Inject constructor(of: ObjectFactory): DefaultTask()
         }
 
         val checkCyclesBetweenPublications = {
-            val cycleDetection = object : CycleDetection<DependencyGraph<FoundModule, ModuleId>.DependencyNode, MPSBuildSettings.PublicationSettings>() {
+            val cycleDetection = object : CycleDetection<DependencyGraph<FoundModule, ModuleId>.DependencyNode, PublicationSettings>() {
                 override fun getOutgoingEdges(element: DependencyGraph<FoundModule, ModuleId>.DependencyNode): Iterable<DependencyGraph<FoundModule, ModuleId>.DependencyNode> {
                     return element.getDependencies()
                 }
 
-                override fun getCategory(element: DependencyGraph<FoundModule, ModuleId>.DependencyNode): MPSBuildSettings.PublicationSettings? {
+                override fun getCategory(element: DependencyGraph<FoundModule, ModuleId>.DependencyNode): PublicationSettings? {
                     return getPublication.get()(element)
                 }
             }
@@ -124,7 +124,7 @@ abstract class CheckConfig @Inject constructor(of: ObjectFactory): DefaultTask()
         }
     }
 
-    private fun resolvePublicationModules(publication: MPSBuildSettings.PublicationSettings, resolver: ModuleResolver): List<FoundModule> {
+    private fun resolvePublicationModules(publication: PublicationSettings, resolver: ModuleResolver): List<FoundModule> {
         val modulesToGenerate: MutableList<FoundModule> = ArrayList()
         val includedPaths = publication.resolveIncludedModules(project.projectDir.toPath())
         val includedModuleNames = publication.getIncludedModuleNames()
