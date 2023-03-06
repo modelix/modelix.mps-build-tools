@@ -196,9 +196,9 @@ class MPSBuildPlugin : Plugin<Project> {
         return version
     }
 
-    private fun String.toValidPublicationName() = replace(Regex("[^A-Za-z0-9_\\-.]"), "_").toLowerCase()
+    private fun String.toValidPublicationName() = replace(Regex("[^A-Za-z0-9_\\-.]"), "_").lowercase()
 
 
 }
 
-private fun String.firstLetterUppercase() = if (isEmpty()) this else substring(0, 1).toUpperCase() + drop(1)
+private fun String.firstLetterUppercase() = if (isEmpty()) this else substring(0, 1).uppercase() + drop(1)
