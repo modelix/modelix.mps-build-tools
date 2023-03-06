@@ -36,7 +36,7 @@ class MPSBuildPlugin : Plugin<Project> {
     private lateinit var dependenciesDir: File
     private lateinit var antScriptFile: File
     private var generator: BuildScriptGenerator? = null
-    private var dirsToMine: Set<File> = setOf()
+    private var dirsToMine: MutableSet<File> = mutableSetOf()
 
     override fun apply(project: Project) {
         this.project = project
@@ -55,7 +55,8 @@ class MPSBuildPlugin : Plugin<Project> {
             dependenciesTargetDir.set(dependenciesDir.normalize())
             targetDir.set(buildDir.resolve("mps"))
             doLast {
-                dirsToMine = setOfNotNull(dependenciesDir, this@register.mpsDir)
+                this@MPSBuildPlugin.dirsToMine.add(dependenciesDir)
+                mpsDir?.let { this@MPSBuildPlugin.dirsToMine.add(it) }
             }
         }
 
@@ -68,7 +69,7 @@ class MPSBuildPlugin : Plugin<Project> {
                 settings.getPublications(),
                 settings.getMacros(project.projectDir.toPath()),
                 buildDir))
-            dependencyFiles.set(this@MPSBuildPlugin.dirsToMine)
+            dependencyFiles.set(dirsToMine)
             antFile.set(antScriptFile)
         }
         val taskCheckConfig = project.tasks.register("checkMpsbuildConfig", CheckConfig::class.java) {
