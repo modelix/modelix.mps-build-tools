@@ -7,6 +7,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.property
@@ -29,9 +30,12 @@ abstract class GenerateAntScript @Inject constructor(of: ObjectFactory): Default
     @OutputFile
     val antFile: RegularFileProperty = of.fileProperty()
 
+    @Internal
+    lateinit var generator: BuildScriptGenerator
+
     @TaskAction
     fun generate() {
-        val generator = createBuildScriptGenerator(generatorSettings.get(), dependencyFiles.get())
+        generator = createBuildScriptGenerator(generatorSettings.get(), dependencyFiles.get())
         val xml = generator.generateXML()
         antFile.asFile.get().writeText(xml)
     }

@@ -37,6 +37,7 @@ class MPSBuildPlugin : Plugin<Project> {
     private lateinit var antScriptFile: File
     private var generator: BuildScriptGenerator? = null
     private var dirsToMine: MutableSet<File> = mutableSetOf()
+    private var moduleWrapper: ModuleWrapper = ModuleWrapper()
 
     override fun apply(project: Project) {
         this.project = project
@@ -71,13 +72,15 @@ class MPSBuildPlugin : Plugin<Project> {
                 buildDir))
             dependencyFiles.set(dirsToMine)
             antFile.set(antScriptFile)
+            doLast {
+                moduleWrapper.found = generator.modulesMiner.getModules()
+                moduleWrapper.ignored.addAll(generator.ignoredModules)
+            }
         }
         val taskCheckConfig = project.tasks.register("checkMpsbuildConfig", CheckConfig::class.java) {
             dependsOn(taskGenerateAntScript)
-            doFirst {
-                generator.set(this@MPSBuildPlugin.generator)
-            }
-            this.settings.set(this@MPSBuildPlugin.settings)
+            moduleWrapper.set(this@MPSBuildPlugin.moduleWrapper)
+            settings.set(this@MPSBuildPlugin.settings)
         }
         val taskLoadPomDependencies = project.tasks.register("loadPomDependencies", LoadPomDependencies::class.java) {
             dependsOn(taskCheckConfig)
@@ -101,9 +104,7 @@ class MPSBuildPlugin : Plugin<Project> {
             dependsOn(taskCheckConfig)
             dependsOn(taskLoadPomDependencies)
             dependsOn(taskAssembleMpsModules)
-            doFirst {
-                generator.set(this@MPSBuildPlugin.generator)
-            }
+            generator.set(this@MPSBuildPlugin.generator)
             publicationsDir.set(this@MPSBuildPlugin.publicationsDir)
             settings.set(this@MPSBuildPlugin.settings)
             publicationsVersion.set(getPublicationsVersion())

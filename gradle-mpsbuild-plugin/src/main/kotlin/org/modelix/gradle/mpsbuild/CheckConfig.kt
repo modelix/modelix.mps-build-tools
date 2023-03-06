@@ -14,8 +14,8 @@ import javax.inject.Inject
 
 abstract class CheckConfig @Inject constructor(of: ObjectFactory): DefaultTask() {
 
-    @Internal
-    val generator: Property<BuildScriptGenerator> = of.property(BuildScriptGenerator::class.java)
+    @Input
+    val moduleWrapper: Property<ModuleWrapper> = of.property()
 
     @Input
     val settings: Property<MPSBuildSettings> = of.property(MPSBuildSettings::class.java)
@@ -29,8 +29,7 @@ abstract class CheckConfig @Inject constructor(of: ObjectFactory): DefaultTask()
 
     @TaskAction
     fun check() {
-        val generator = generator.get()
-        val resolver = ModuleResolver(generator.modulesMiner.getModules(), generator.ignoredModules)
+        val resolver = ModuleResolver(moduleWrapper.get().found, moduleWrapper.get().ignored)
         val graph = PublicationDependencyGraph(resolver, emptyMap())
         val publication2modules = settings.get().getPublications().associateWith { resolvePublicationModules(it, resolver).toSet() }
         for (modulesA in publication2modules) {
