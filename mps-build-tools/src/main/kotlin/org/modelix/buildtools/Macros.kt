@@ -13,11 +13,12 @@
  */
 package org.modelix.buildtools
 
+import java.io.Serializable
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.absolutePathString
 
-class Macros(val macros: Map<String, Path> = mapOf()) {
+class Macros(val macros: Map<String, Path> = mapOf()) : Serializable {
     fun with(key: String, value: Path) = with(key to value)
     fun with(vararg entry: Pair<String, Path>) = Macros(macros + entry)
     fun resolve(input: String): Path {
