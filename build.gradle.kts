@@ -1,12 +1,9 @@
 buildscript {
     repositories {
-        /* It is useful to have the central maven repo before the Itemis's one
-           as it is more reliable */
         maven { url = uri("https://repo.maven.apache.org/maven2") }
         maven { url = uri("https://plugins.gradle.org/m2/") }
         mavenCentral()
         maven { url = uri("https://artifacts.itemis.cloud/repository/maven-mps/") }
-        maven { url = uri("https://projects.itemis.de/nexus/content/repositories/mbeddr") }
     }
 
     dependencies {
@@ -59,7 +56,6 @@ subprojects {
         maven { url = uri("https://repo.maven.apache.org/maven2") }
         mavenCentral()
         maven { url = uri("https://artifacts.itemis.cloud/repository/maven-mps/") }
-        maven { url = uri("https://projects.itemis.de/nexus/content/repositories/mbeddr") }
     }
 
     publishing {
@@ -68,11 +64,9 @@ subprojects {
                 maven {
                     name = "GitHubPackages"
                     url = uri("https://maven.pkg.github.com/modelix/mpsbuild")
-                    if (githubCredentials != null) {
-                        credentials {
-                            username = githubCredentials.first
-                            password = githubCredentials.second
-                        }
+                    credentials {
+                        username = githubCredentials.first
+                        password = githubCredentials.second
                     }
                 }
             }
@@ -86,19 +80,6 @@ subprojects {
                     credentials {
                         username = project.findProperty("artifacts.itemis.cloud.user").toString()
                         password = project.findProperty("artifacts.itemis.cloud.pw").toString()
-                    }
-                }
-            }
-            if (project.hasProperty("projects.itemis.de.user")) {
-                maven {
-                    name = "itemisNexus2"
-                    url = if (version.toString().contains("SNAPSHOT"))
-                        uri("https://projects.itemis.de/nexus/content/repositories/mbeddr_snapshots/")
-                    else
-                        uri("https://projects.itemis.de/nexus/content/repositories/mbeddr/")
-                    credentials {
-                        username = project.findProperty("projects.itemis.de.user").toString()
-                        password = project.findProperty("projects.itemis.de.pw").toString()
                     }
                 }
             }
