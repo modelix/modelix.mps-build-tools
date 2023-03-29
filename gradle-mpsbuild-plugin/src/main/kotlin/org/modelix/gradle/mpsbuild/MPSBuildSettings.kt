@@ -28,6 +28,7 @@ open class MPSBuildSettings {
     private lateinit var project: Project
     lateinit var dependenciesConfig: Configuration
     var mpsDependenciesConfig: Configuration? = null
+    var parentPublicationName: String? = "all"
     private val publications: MutableMap<String, PublicationSettings> = LinkedHashMap()
     var mpsHome: String? = null
     private val searchPaths: MutableList<String> = ArrayList()
@@ -137,10 +138,15 @@ open class MPSBuildSettings {
     fun publication(name: String, action: Action<PublicationSettings>): PublicationSettings {
         require(!publications.containsKey(name)) { "Duplicate publication '$name'" }
         require(name != "all") { "publication name '$name' already exists" }
+        require(name != parentPublicationName) { "publication name '$name' already exists" }
         val publication = PublicationSettings(name)
         publications[name] = publication
         action.execute(publication)
         return publication
+    }
+
+    fun disableParentPublication() {
+        parentPublicationName = null
     }
 
     inner class IdeaPluginSettings {

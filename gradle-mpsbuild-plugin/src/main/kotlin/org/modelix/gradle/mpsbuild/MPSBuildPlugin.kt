@@ -325,19 +325,22 @@ class MPSBuildPlugin : Plugin<Project> {
                 }
             }
 
-            create("_all_", MavenPublication::class.java) {
-                val publication = this
-                publication.groupId = project.group.toString()
-                publication.artifactId = "all"
-                publication.version = publicationsVersion
-                publication.pom {
-                    withXml {
-                        asElement().newChild("dependencies") {
-                            for (publicationData in settings.getPublications()) {
-                                newChild("dependency") {
-                                    newChild("groupId", project.group.toString())
-                                    newChild("artifactId", publicationData.name.toValidPublicationName())
-                                    newChild("version", publicationsVersion)
+            val parentPublicationName = settings.parentPublicationName
+            if (parentPublicationName != null) {
+                create("_${parentPublicationName}_", MavenPublication::class.java) {
+                    val publication = this
+                    publication.groupId = project.group.toString()
+                    publication.artifactId = parentPublicationName
+                    publication.version = publicationsVersion
+                    publication.pom {
+                        withXml {
+                            asElement().newChild("dependencies") {
+                                for (publicationData in settings.getPublications()) {
+                                    newChild("dependency") {
+                                        newChild("groupId", project.group.toString())
+                                        newChild("artifactId", publicationData.name.toValidPublicationName())
+                                        newChild("version", publicationsVersion)
+                                    }
                                 }
                             }
                         }
