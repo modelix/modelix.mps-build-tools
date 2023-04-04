@@ -24,4 +24,4 @@ jobs:
     - name: Test MPSBuild Gradle Plugin
       env:
        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: gradle-mpsbuild-test/ci.sh
+      run: build-tools-gradle-test/ci.sh
