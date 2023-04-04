@@ -1,7 +1,7 @@
 pluginManagement {
     val mpsBuildVersion: String = file("../version.txt").readText()
     plugins {
-        id("org.modelix.mpsbuild") version mpsBuildVersion
+        id("org.modelix.mps.build-tools") version mpsBuildVersion
     }
     repositories {
         repositories {
@@ -12,5 +12,5 @@ pluginManagement {
         }
     }
 }
-rootProject.name = "gradle-mpsbuild-test"
+rootProject.name = "build-tools-gradle-test"
 
