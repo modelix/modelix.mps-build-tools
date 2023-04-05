@@ -1,4 +1,4 @@
-rootProject.name = "mpsbuild"
+rootProject.name = "mps-build-tools"
 
-include("gradle-mpsbuild-plugin")
-include("mps-build-tools")
+include("build-tools-gradle")
+include("build-tools-lib")

@@ -10,7 +10,7 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":mps-build-tools"))
+    implementation(project(":build-tools-lib"))
     implementation("org.zeroturnaround:zt-zip:1.14")
     testImplementation("junit:junit:4.13.2")
 }
@@ -18,7 +18,7 @@ dependencies {
 gradlePlugin {
     plugins {
         register("mpsbuildPlugin") {
-            id = project.group.toString()
+            id = "org.modelix.mps.build-tools"
             implementationClass = "org.modelix.gradle.mpsbuild.MPSBuildPlugin"
         }
     }

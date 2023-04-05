@@ -3,7 +3,7 @@ import org.modelix.gradle.mpsbuild.MPSBuildSettings
 plugins {
     base
     `maven-publish`
-    id("org.modelix.mpsbuild")
+    id("org.modelix.mps.build-tools")
 }
 
 group = "org.modelix"

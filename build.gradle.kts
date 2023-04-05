@@ -26,7 +26,7 @@ val githubCredentials = if (project.hasProperty("gpr.user") && project.hasProper
         null
     }
 
-group = "org.modelix.mpsbuild"
+group = "org.modelix.mps"
 description = "Replacement for the MPS build language"
 
 val versionFile = projectDir.resolve("version.txt")
@@ -63,7 +63,7 @@ subprojects {
             if (githubCredentials != null) {
                 maven {
                     name = "GitHubPackages"
-                    url = uri("https://maven.pkg.github.com/modelix/mpsbuild")
+                    url = uri("https://maven.pkg.github.com/modelix/modelix.mps-build-tools")
                     credentials {
                         username = githubCredentials.first
                         password = githubCredentials.second

@@ -20,7 +20,7 @@ publishing {
     publications {
         create<MavenPublication>("buildTools") {
             groupId = project.group.toString()
-            artifactId = "build-tools"
+            artifactId = "build-tools-lib"
             version = project.version.toString()
 
             from(components["java"])
