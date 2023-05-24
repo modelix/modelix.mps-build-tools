@@ -42,16 +42,22 @@ class ModulesMiner() {
     }
 
     fun searchInFolder(folder: ModuleOrigin, fileFilter: (File)->Boolean) {
-        collectModules(folder.localPath.normalize().toFile(), null, folder, fileFilter)
+        collectModules(
+            file = folder.localPath.normalize().toFile(),
+            virtualFolder = null,
+            owner = null,
+            origin = folder,
+            fileFilter = fileFilter
+        )
     }
 
-    private fun collectModules(file: File, owner: ModuleOwner?, origin: ModuleOrigin, fileFilter: (File)->Boolean) {
+    private fun collectModules(file: File, virtualFolder: String?, owner: ModuleOwner?, origin: ModuleOrigin, fileFilter: (File)->Boolean) {
         if (isIgnored(file, fileFilter)) return
         if (file.isFile) {
             when (file.extension.lowercase()) {
                 // see jetbrains.mps.project.MPSExtentions
                 "msd", "mpl", "devkit" -> {
-                    val sourceOwner = owner ?: SourceModuleOwner(origin.localModulePath(file))
+                    val sourceOwner = owner ?: SourceModuleOwner(origin.localModulePath(file), virtualFolder)
                     FileInputStream(file).use { stream ->
                         loadModules(stream, sourceOwner)
                     }
@@ -138,10 +144,16 @@ class ModulesMiner() {
             val modulesXmlFile = File(projectSettingsDir, "modules.xml")
             if (modulesXmlFile.exists() && modulesXmlFile.isFile) {
                 val moduleFiles = readProjectModulesFile(modulesXmlFile, file)
-                    .filter { !isModuleFileIgnored(it, file, fileFilter) }
+                    .filter { !isModuleFileIgnored(it.moduleFile, file, fileFilter) }
 //                println("MPS project found in $file. Loading only modules that are part of the project:")
 //                moduleFiles.forEach { println("    $it") }
-                moduleFiles.forEach { moduleFile -> collectModules(moduleFile, owner, origin, fileFilter) }
+                moduleFiles.forEach { moduleFile -> collectModules(
+                    file = moduleFile.moduleFile,
+                    virtualFolder = moduleFile.virtualFolder,
+                    owner = owner,
+                    origin = origin,
+                    fileFilter = fileFilter
+                ) }
             } else {
                 val pluginXml = File(File(file, "META-INF"), "plugin.xml")
                 val isPluginDir = pluginXml.exists()
@@ -153,7 +165,13 @@ class ModulesMiner() {
                     pluginOwner.getModuleJarFolders()
                 }
                 subFolders.forEach { child ->
-                    collectModules(child, pluginOwner ?: owner, origin, fileFilter)
+                    collectModules(
+                        file = child,
+                        virtualFolder = null,
+                        owner = pluginOwner ?: owner,
+                        origin = origin,
+                        fileFilter = fileFilter
+                    )
                 }
             }
         }
@@ -173,7 +191,7 @@ class ModulesMiner() {
         return false
     }
 
-    private fun readProjectModulesFile(modulesXmlFile: File, projectDir: File): List<File> {
+    private fun readProjectModulesFile(modulesXmlFile: File, projectDir: File): List<ProjectModule> {
         val xml = readXmlFile(modulesXmlFile)
         val moduleElements = xml.documentElement
             .findTag("component")
@@ -181,8 +199,13 @@ class ModulesMiner() {
             ?.childElements()
             ?.filter { it.tagName == "modulePath" }
             ?: return listOf()
-        val paths = moduleElements.map { it.getAttribute("path").replace("\$PROJECT_DIR\$", projectDir.absolutePath) }
-        return paths.map { File(it) }.filter { it.exists() && it.isFile }
+        val moduleFiles = moduleElements.map {
+            ProjectModule(
+                File(it.getAttribute("path").replace("\$PROJECT_DIR\$", projectDir.absolutePath)),
+                it.getAttribute("folder")
+            )
+        }
+        return moduleFiles.filter { it.moduleFile.exists() && it.moduleFile.isFile }
     }
 
     private fun loadModules(file: InputStream, owner: ModuleOwner) {
@@ -261,3 +284,5 @@ class ModulesMiner() {
         }
     }
 }
+
+private class ProjectModule(val moduleFile: File, val virtualFolder: String)
