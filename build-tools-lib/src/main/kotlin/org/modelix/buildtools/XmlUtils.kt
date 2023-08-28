@@ -103,12 +103,12 @@ fun readXmlFile(file: File): Document {
     }
 }
 
-fun readXmlFile(file: InputStream): Document {
+fun readXmlFile(file: InputStream, name: String? = null): Document {
     val dbf = DocumentBuilderFactory.newInstance()
     //dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true)
     disableDTD(dbf)
     val db = dbf.newDocumentBuilder()
-    return db.parse(file)
+    return db.parse(file, name)
 }
 
 private fun disableDTD(dbf: DocumentBuilderFactory) {
