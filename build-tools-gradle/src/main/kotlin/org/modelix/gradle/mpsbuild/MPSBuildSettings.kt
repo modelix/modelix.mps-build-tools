@@ -165,7 +165,7 @@ open class MPSBuildSettings {
             description = value
         }
         fun pluginXml(content: String) {
-            pluginXml = readXmlFile(content.byteInputStream())
+            pluginXml = readXmlFile(content.byteInputStream(), "pluginXml of $implementationModule")
         }
     }
 

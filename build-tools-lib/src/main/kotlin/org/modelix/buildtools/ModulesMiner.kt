@@ -59,7 +59,7 @@ class ModulesMiner() {
                 "msd", "mpl", "devkit" -> {
                     val sourceOwner = owner ?: SourceModuleOwner(origin.localModulePath(file), virtualFolder)
                     FileInputStream(file).use { stream ->
-                        loadModules(stream, sourceOwner)
+                        loadModules(stream, file.toString(), sourceOwner)
                     }
                     for (module in sourceOwner.modules.values) {
                         val descriptor = module.moduleDescriptor ?: continue
@@ -83,7 +83,7 @@ class ModulesMiner() {
                         val jarContentVisitor = { stream: InputStream, entry: ZipEntry ->
                             when (entry.name) {
                                 "META-INF/module.xml" -> {
-                                    loadModules(stream, libraryModuleOwner)
+                                    loadModules(stream, file.toString() + "!" + entry.name, libraryModuleOwner)
                                 }
                                 "META-INF/plugin.xml" -> {
                                     if (owner == null) {
@@ -93,7 +93,7 @@ class ModulesMiner() {
                                 else -> {
                                     when (entry.name.substringAfterLast('.', "").lowercase()) {
                                         "msd", "mpl", "devkit" -> {
-                                            loadModules(stream, libraryModuleOwner)
+                                            loadModules(stream, file.toString() + "!" + entry.name, libraryModuleOwner)
                                         }
                                     }
                                 }
@@ -208,8 +208,8 @@ class ModulesMiner() {
         return moduleFiles.filter { it.moduleFile.exists() && it.moduleFile.isFile }
     }
 
-    private fun loadModules(file: InputStream, owner: ModuleOwner) {
-        loadModules(readXmlFile(file).documentElement, owner)
+    private fun loadModules(file: InputStream, name: String, owner: ModuleOwner) {
+        loadModules(readXmlFile(file, name).documentElement, owner)
     }
 
     private val typeMap = mapOf("language" to ModuleType.Language, "solution" to ModuleType.Solution, "dev-kit" to ModuleType.Devkit, "devkit" to ModuleType.Devkit, "generator" to ModuleType.Generator)
@@ -239,7 +239,7 @@ class ModulesMiner() {
             // TODO .mpb
             if (file.extension == "mps" || file.extension == "model") {
                 FileInputStream(file).use {
-                    dependenciesFromModel(it, module)
+                    dependenciesFromModel(it, file.toString(), module)
                 }
             }
         } else {
@@ -253,8 +253,8 @@ class ModulesMiner() {
      * DevKits don't appear as a dependency in the module. The module only references languages.
      * That's why we also have to extract dependencies from the models.
      */
-    private fun dependenciesFromModel(xmlStream: InputStream, module: FoundModule) {
-        val xml = readXmlFile(xmlStream)
+    private fun dependenciesFromModel(xmlStream: InputStream, streamName: String, module: FoundModule) {
+        val xml = readXmlFile(xmlStream, streamName)
         val doc: Element = xml.documentElement
         val languages = doc.findTag("languages")
         if (languages != null) {
