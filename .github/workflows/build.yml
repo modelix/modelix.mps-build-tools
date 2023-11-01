@@ -6,22 +6,34 @@ on:
       - '**'
 
 jobs:
-  assembleWholeProject:
-
+  build-and-test-with-mps:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        mpsversion: [ "2020.3.6", "2021.1.4", "2021.2.6", "2021.3.4", "2022.2.1", "2022.3", "2022.3" ]
+        javaversion: [ 17 ]
+        include:
+        - mpsversion: "2020.3.6"
+          javaversion: 11
+        - mpsversion: "2021.1.4"
+          javaversion: 11
+        - mpsversion: "2021.2.6"
+          javaversion: 11
+        - mpsversion: "2021.3.4"
+          javaversion: 11
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up JDK 11
-      uses: actions/setup-java@v2
-      with:
-        distribution: 'temurin'
-        java-version: '11'
-    - name: Assemble
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: ./gradlew build publishToMavenLocal -PciBuild=true
-    - name: Test MPSBuild Gradle Plugin
-      env:
-       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: build-tools-gradle-test/ci.sh
+      - uses: actions/checkout@v3
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.javaversion }}
+      - name: Set up Gradle
+        uses: gradle/gradle-build-action@v2
+      - name: Assemble
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew build publishToMavenLocal -PciBuild=true
+      - name: Test with ${{ matrix.version }}
+        run: cd build-tools-gradle-test && ./gradlew --build-cache build publishToMavenLocal -Pmps.version=${{ matrix.mpsversion }}

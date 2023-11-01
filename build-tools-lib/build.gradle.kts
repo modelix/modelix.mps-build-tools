@@ -12,6 +12,30 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.0")
 }
 
+val versionGenDir: Provider<Directory> = project.layout.buildDirectory.dir("version_gen")
+val generateVersionVariable by tasks.creating {
+    doLast {
+        val outputDir = versionGenDir.map { it.dir("org/modelix/buildtools") }.get().asFile
+        outputDir.mkdirs()
+        outputDir.resolve("Version.kt").writeText(
+            """
+            package org.modelix.buildtools
+
+            const val modelixBuildToolsVersion: String = "$version"
+
+            """.trimIndent(),
+        )
+    }
+}
+kotlin {
+    sourceSets.named("main") {
+        kotlin.srcDir(versionGenDir)
+    }
+}
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
+    dependsOn(generateVersionVariable)
+}
+
 tasks.getByName<Test>("test") {
     useJUnitPlatform()
 }
