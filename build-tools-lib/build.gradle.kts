@@ -6,7 +6,7 @@ plugins {
 
 dependencies {
     implementation("org.zeroturnaround:zt-zip:1.14")
-    implementation("org.apache.commons:commons-text:1.9")
+    implementation("org.apache.commons:commons-text:1.10.0")
     implementation("commons-io:commons-io:2.11.0")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.0")
