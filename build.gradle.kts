@@ -14,7 +14,7 @@ plugins {
     kotlin("jvm") version "1.8.10" apply false
     kotlin("plugin.serialization") version "1.8.10" apply false
     `maven-publish`
-    id("com.palantir.git-version") version "0.13.0"
+    id("com.palantir.git-version") version "3.0.0"
 }
 
 val githubCredentials = if (project.hasProperty("gpr.user") && project.hasProperty("gpr.key")) {
