@@ -13,20 +13,29 @@
  */
 package org.modelix.gradle.mpsbuild
 
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.provider.Property
+import org.gradle.jvm.tasks.Jar
+import org.gradle.kotlin.dsl.getValue
+import org.gradle.kotlin.dsl.property
+import org.gradle.kotlin.dsl.provideDelegate
+import org.gradle.kotlin.dsl.setValue
 import org.modelix.buildtools.Macros
 import org.modelix.buildtools.readXmlFile
+import org.modelix.buildtools.runner.MPSRunnerConfig
 import org.w3c.dom.Document
+import java.io.File
 import java.net.URL
 import java.nio.file.Path
 import java.util.stream.Collectors
 
-open class MPSBuildSettings {
+open class MPSBuildSettings(val project: Project) {
     private val mpsVersionPattern = Regex("(\\d+\\.\\d+)(\\.\\d+)?")
-    private lateinit var project: Project
-    lateinit var dependenciesConfig: Configuration
+    val dependenciesConfig: Configuration = project.configurations.create("mpsBuild-dependencies")
     var mpsDependenciesConfig: Configuration? = null
     var parentPublicationName: String? = "all"
     private val publications: MutableMap<String, PublicationSettings> = LinkedHashMap()
@@ -39,6 +48,7 @@ open class MPSBuildSettings {
     var mpsFullVersion: String? = null
     private var mpsDownloadUrl: URL? = null
     private val taskDependencies: MutableList<Any> = ArrayList()
+    internal val runConfigs: MutableMap<String, RunMPSTaskConfig> = HashMap()
 
     fun getTaskDependencies(): List<Any> = taskDependencies
 
@@ -72,11 +82,6 @@ open class MPSBuildSettings {
 
     fun getMpsMavenCoordinates(): String {
         return "com.jetbrains:mps:$mpsFullVersion"
-    }
-
-    fun setProject(p: Project) {
-        project = p
-        dependenciesConfig = project.configurations.create("mpsBuild-dependencies")
     }
 
     fun externalModules(coordinates: Any) {
@@ -124,7 +129,11 @@ open class MPSBuildSettings {
     }
 
     fun resolveModulePaths(workdir: Path): List<Path> {
-        return if (searchPaths.isEmpty()) listOf(workdir) else searchPaths.stream().map { path: String? -> workdir.resolve(path).normalize() }.distinct().collect(Collectors.toList())
+        return if (searchPaths.isEmpty()) {
+            listOf(workdir)
+        } else {
+            searchPaths.map { workdir.resolve(it).normalize() }.distinct().toList()
+        }
     }
 
     fun getMacros(workdir: Path): Macros {
@@ -143,6 +152,10 @@ open class MPSBuildSettings {
         publications[name] = publication
         action.execute(publication)
         return publication
+    }
+
+    fun runMPS(name: String, action: Action<RunMPSTaskConfig>): RunMPSTaskConfig {
+        return runConfigs.getOrPut(name) { RunMPSTaskConfig(name) }.also { action.execute(it) }
     }
 
     fun disableParentPublication() {
@@ -196,5 +209,64 @@ open class MPSBuildSettings {
             action.execute(plugin)
             return plugin
         }
+    }
+
+    inner class RunMPSTaskConfig(val name: String) {
+        internal var configProperty: Property<MPSRunnerConfig> = project.objects.property<MPSRunnerConfig>().also { it.set(MPSRunnerConfig()) }
+        internal var config by configProperty
+        internal val classPathFromConfigurations: MutableSet<Configuration> = LinkedHashSet()
+        internal val taskDependencies: MutableList<Any> = ArrayList()
+        internal var implementationLambda: (() -> Any)? = null
+        internal var result: CompletableDeferred<Any>? = null
+
+        fun updateConfig(body: (MPSRunnerConfig) -> MPSRunnerConfig): RunMPSTaskConfig {
+            val oldConfig = config
+            val newConfig = body(oldConfig)
+            config = newConfig
+            return this
+        }
+
+        fun mainClassName(name: String) = updateConfig { it.copy(mainClassName = name) }
+        fun mainMethodName(name: String) = updateConfig { it.copy(mainMethodName = name) }
+        fun mainMethodFqName(fqName: String): RunMPSTaskConfig {
+            return mainClassName(fqName.substringBeforeLast("."))
+                .mainMethodName(fqName.substringAfterLast("."))
+        }
+        fun implementation(body: () -> Unit) = also { implementationLambda = body }
+
+        @OptIn(ExperimentalCoroutinesApi::class)
+        fun <R> implementation(body: () -> R, onSuccess: (R) -> Unit) {
+            implementationLambda = body as () -> Any
+            val deferred = CompletableDeferred<R>().also { result = it as CompletableDeferred<Any> }
+            deferred.invokeOnCompletion {
+                onSuccess(deferred.getCompleted())
+            }
+        }
+        fun includeConfiguration(c: Configuration) {
+            classPathFromConfigurations += c
+        }
+        fun includeConfiguration(name: String) {
+            project.configurations.named(name) {
+                includeConfiguration(this)
+            }
+        }
+        fun includeProjectRuntime() {
+            project.configurations.named("runtimeClasspath") {
+                includeConfiguration(this)
+            }
+            taskDependencies += "jar"
+            project.tasks.named("jar", Jar::class.java) {
+                classPathElement(this.archiveFile.get().asFile)
+            }
+        }
+        fun moduleDir(dir: File) = updateConfig { it.copy(additionalModuleDirs = it.additionalModuleDirs + dir) }
+        fun moduleDependency(reference: String) = updateConfig { it.copy(additionalModuleDependencies = it.additionalModuleDependencies + reference) }
+        fun moduleDependencies(dir: File) = updateConfig {
+            it.copy(additionalModuleDependencyDirs = it.additionalModuleDependencyDirs + dir)
+        }
+        fun classPathElement(fileOrDir: File) = updateConfig { it.copy(classPathElements = it.classPathElements + fileOrDir) }
+        fun jarLibrary(file: File) = updateConfig { it.copy(classPathElements = it.classPathElements + file) }
+        fun jarLibraries(dir: File) = updateConfig { it.copy(jarFolders = it.classPathElements + dir) }
+        fun jvmArg(arg: String) = updateConfig { it.copy(jvmArgs = it.jvmArgs + arg) }
     }
 }

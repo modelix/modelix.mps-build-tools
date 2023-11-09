@@ -131,29 +131,7 @@ class BuildScriptGenerator(val modulesMiner: ModulesMiner,
                         setAttribute("location", "\${mps.home}/$path")
                     }
                 }
-                if (mpsVersion < "2021.2") {
-                    // https://raw.githubusercontent.com/JetBrains/MPS/2021.1/plugins/mps-build/solutions/mpsBuild/source_gen/jetbrains/mps/ide/build/mpsBootstrapCore.xml
-                    addLib("lib/ant/lib/ant-mps.jar")
-                    addLib("lib/log4j.jar")
-                    addLib("lib/jdom.jar")
-                } else if (mpsVersion < "2021.3") {
-                    // https://raw.githubusercontent.com/JetBrains/MPS/2021.2/plugins/mps-build/solutions/mpsBuild/source_gen/jetbrains/mps/ide/build/mpsBootstrapCore.xml
-                    addLib("lib/ant/lib/ant-mps.jar")
-                    addLib("lib/util.jar")
-                } else if (mpsVersion < "2022.3") {
-                    // https://raw.githubusercontent.com/JetBrains/MPS/2022.2/plugins/mps-build/solutions/mpsBuild/source_gen/jetbrains/mps/ide/build/mpsBootstrapCore.xml
-                    addLib("lib/ant/lib/ant-mps.jar")
-                    addLib("lib/util.jar")
-                    addLib("lib/3rd-party-rt.jar")
-                } else if (mpsVersion < "2023.1") {
-                    // https://raw.githubusercontent.com/JetBrains/MPS/2022.3/plugins/mps-build/solutions/mpsBuild/source_gen/jetbrains/mps/ide/build/mpsBootstrapCore.xml
-                    addLib("lib/ant/lib/ant-mps.jar")
-                    addLib("lib/util.jar")
-                } else {
-                    // https://raw.githubusercontent.com/JetBrains/MPS/master/plugins/mps-build/solutions/mpsBuild/source_gen/jetbrains/mps/ide/build/mpsBootstrapCore.xml
-                    addLib("lib/ant/lib/ant-mps.jar")
-                    addLib("lib/util-8.jar")
-                }
+                getMpsAntLibraries(mpsVersion).forEach { addLib(it) }
             }
             newChild("path") {
                 setAttribute("id", "path.mps.libs")
@@ -874,6 +852,44 @@ class BuildScriptGenerator(val modulesMiner: ModulesMiner,
         }
         fun pluginDependencies(resolver: ModuleResolver) = module.getClassPathDependencies(resolver)
             .map { it.owner }.filterIsInstance<PluginModuleOwner>()
+    }
+
+    companion object {
+        fun getMpsAntLibraries(mpsVersion: String): List<String> {
+            return if (mpsVersion < "2021.2") {
+                // https://raw.githubusercontent.com/JetBrains/MPS/2021.1/plugins/mps-build/solutions/mpsBuild/source_gen/jetbrains/mps/ide/build/mpsBootstrapCore.xml
+                listOf(
+                    "lib/ant/lib/ant-mps.jar",
+                    "lib/log4j.jar",
+                    "lib/jdom.jar",
+                )
+            } else if (mpsVersion < "2021.3") {
+                // https://raw.githubusercontent.com/JetBrains/MPS/2021.2/plugins/mps-build/solutions/mpsBuild/source_gen/jetbrains/mps/ide/build/mpsBootstrapCore.xml
+                listOf(
+                    "lib/ant/lib/ant-mps.jar",
+                    "lib/util.jar"
+                )
+            } else if (mpsVersion < "2022.3") {
+                // https://raw.githubusercontent.com/JetBrains/MPS/2022.2/plugins/mps-build/solutions/mpsBuild/source_gen/jetbrains/mps/ide/build/mpsBootstrapCore.xml
+                listOf(
+                    "lib/ant/lib/ant-mps.jar",
+                    "lib/util.jar",
+                    "lib/3rd-party-rt.jar"
+                )
+            } else if (mpsVersion < "2023.1") {
+                // https://raw.githubusercontent.com/JetBrains/MPS/2022.3/plugins/mps-build/solutions/mpsBuild/source_gen/jetbrains/mps/ide/build/mpsBootstrapCore.xml
+                listOf(
+                    "lib/ant/lib/ant-mps.jar",
+                    "lib/util.jar"
+                )
+            } else {
+                // https://raw.githubusercontent.com/JetBrains/MPS/master/plugins/mps-build/solutions/mpsBuild/source_gen/jetbrains/mps/ide/build/mpsBootstrapCore.xml
+                listOf(
+                    "lib/ant/lib/ant-mps.jar",
+                    "lib/util-8.jar"
+                )
+            }
+        }
     }
 }
 

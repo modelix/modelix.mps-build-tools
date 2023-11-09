@@ -16,8 +16,9 @@ package org.modelix.buildtools
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.Node
-import java.io.*
-import javax.xml.XMLConstants
+import java.io.File
+import java.io.InputStream
+import java.io.StringWriter
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.transform.OutputKeys
 import javax.xml.transform.Transformer
@@ -79,6 +80,17 @@ fun Element.getAttributeOrNull(name: String): String? {
     return getAttribute(name).ifEmpty { null }
 }
 
+fun buildXmlString(body: Document.() -> Unit): String {
+    return xmlToString(buildXml(body))
+}
+
+fun buildXml(body: Document.() -> Unit): Document {
+    val dbf = DocumentBuilderFactory.newInstance()
+    val db = dbf.newDocumentBuilder()
+    val doc = db.newDocument()
+    body(doc)
+    return doc
+}
 
 fun xmlToString(doc: Document): String {
     val transformerFactory: TransformerFactory = TransformerFactory.newInstance()
