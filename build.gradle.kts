@@ -11,7 +11,7 @@ buildscript {
 }
 
 plugins {
-    kotlin("jvm") version "1.8.10" apply false
+    kotlin("jvm") version "1.9.21" apply false
     kotlin("plugin.serialization") version "1.8.10" apply false
     `maven-publish`
     id("com.palantir.git-version") version "0.13.0"
