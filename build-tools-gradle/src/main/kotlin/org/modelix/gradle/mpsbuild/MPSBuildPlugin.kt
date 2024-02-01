@@ -35,31 +35,29 @@ import org.modelix.buildtools.DependencyGraph
 import org.modelix.buildtools.FoundModule
 import org.modelix.buildtools.GraphWithCyclesVisitor
 import org.modelix.buildtools.ModuleId
+import org.modelix.buildtools.ModuleIdAndName
 import org.modelix.buildtools.ModuleResolver
 import org.modelix.buildtools.ModulesMiner
 import org.modelix.buildtools.PublicationDependencyGraph
 import org.modelix.buildtools.SourceModuleOwner
+import org.modelix.buildtools.StubsSolutionGenerator
 import org.modelix.buildtools.invokelambda.InvokeLambda
 import org.modelix.buildtools.modelixBuildToolsVersion
 import org.modelix.buildtools.newChild
-import org.modelix.buildtools.newXmlDocument
 import org.modelix.buildtools.runner.MPSRunner
 import org.modelix.buildtools.runner.MPSRunnerConfig
-import org.modelix.buildtools.xmlToString
 import org.zeroturnaround.zip.ZipUtil
 import java.io.File
-import java.io.FileInputStream
-import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.net.URI
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.UUID
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import kotlin.io.path.toPath
-import kotlin.properties.Delegates
 
 class MPSBuildPlugin : Plugin<Project> {
     private val stubsPattern = Regex("stubs#([^#]+)#([^#]+)#([^#]+)")
@@ -645,52 +643,11 @@ class MPSBuildPlugin : Plugin<Project> {
 
     private fun generateStubsSolution(dependency: ResolvedDependency, stubsDir: File) {
         val solutionName = getStubSolutionName(dependency)
-        val jars = dependency.moduleArtifacts.map { it.file }.filter { it.extension == "jar" }
-        val xml = newXmlDocument {
-            newChild("solution") {
-                setAttribute("name", solutionName)
-                setAttribute("pluginKind", "PLUGIN_OTHER")
-                setAttribute("moduleVersion", "0")
-                setAttribute("uuid", "~$solutionName")
-                newChild("facets") {
-                    newChild("facet") {
-                        setAttribute("type", "java")
-                    }
-                }
-                newChild("models") {
-                    for (jar in jars) {
-                        newChild("modelRoot") {
-                            setAttribute("type", "java_classes")
-                            setAttribute("contentPath", jar.parentFile.absolutePath)
-                            newChild("sourceRoot") {
-                                setAttribute("location", jar.name)
-                            }
-                        }
-                    }
-                }
-                newChild("dependencies") {
-                    newChild("dependency", "6354ebe7-c22a-4a0f-ac54-50b52ab9b065(JDK)") {
-                        setAttribute("reexport", "true")
-                    }
-                    for (transitiveDep in dependency.children) {
-                        val n = getStubSolutionName(transitiveDep)
-                        newChild("dependency", "~$n($n)") {
-                            setAttribute("reexport", "true")
-                        }
-                    }
-                }
-                newChild("stubModelEntries") {
-                    for (jar in jars) {
-                        newChild("stubModelEntry") {
-                            setAttribute("path", jar.absolutePath)
-                        }
-                    }
-                }
-            }
-        }
-        val solutionFile = stubsDir.resolve(solutionName).resolve("$solutionName.msd")
-        solutionFile.parentFile.mkdirs()
-        solutionFile.writeText(xmlToString(xml))
+        StubsSolutionGenerator(
+            solutionIdAndName = ModuleIdAndName(ModuleId("~$solutionName"), solutionName),
+            jarPaths = dependency.moduleArtifacts.map { it.file }.filter { it.extension == "jar" }.map { it.absolutePath }.distinct(),
+            moduleDependencies = dependency.children.map { getStubSolutionName(it) }.map { ModuleIdAndName(ModuleId("~$solutionName"), solutionName) }
+        ).generateFile(stubsDir.resolve(solutionName).resolve("$solutionName.msd"))
     }
 
     private fun String.toValidPublicationName() = replace(Regex("[^A-Za-z0-9_\\-.]"), "_").toLowerCase()
