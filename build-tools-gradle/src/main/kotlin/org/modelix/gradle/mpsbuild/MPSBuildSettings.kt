@@ -40,6 +40,11 @@ open class MPSBuildSettings(val project: Project) {
     var parentPublicationName: String? = "all"
     private val publications: MutableMap<String, PublicationSettings> = LinkedHashMap()
     var mpsHome: String? = null
+
+    /**
+     * The JAVA_HOME used when running the ANT script
+     */
+    var javaHome: File? = null
     private val searchPaths: MutableList<String> = ArrayList()
     private val macros: MutableMap<String, String> = HashMap()
     var generatorHeapSize: String = "2G"

@@ -236,6 +236,7 @@ class MPSBuildPlugin : Plugin<Project> {
             standardOutput = System.out
             errorOutput = System.err
             standardInput = System.`in`
+            settings.javaHome?.let { environment("JAVA_HOME", it.absolutePath) }
         }
         taskAssembleMpsModules.dependsOn(taskGenerateAntScript)
 
