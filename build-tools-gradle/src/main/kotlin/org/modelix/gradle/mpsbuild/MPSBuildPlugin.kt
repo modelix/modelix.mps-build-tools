@@ -111,15 +111,17 @@ class MPSBuildPlugin : Plugin<Project> {
         val mavenPublications = HashMap<MPSBuildSettings.PublicationSettings, MavenPublication>()
 
         val mpsDir = buildDir.resolve("mps")
-        mpsDirCurrent = mpsDir.resolve("current")
+        mpsDirCurrent = settings.mpsHome?.let { File(it) } ?: mpsDir.resolve("current")
 
         taskBody(taskCopyDependencies) {
-            copyDependencies(settings.dependenciesConfig, dependenciesDir.normalize())
-            val downloadedTo = checkNotNull(downloadMps(settings, mpsDir)) { "No MPS version or location specified" }
-            if (mpsDirCurrent.exists()) {
-                mpsDirCurrent.deleteRecursively()
+            if (settings.mpsHome == null) {
+                copyDependencies(settings.dependenciesConfig, dependenciesDir.normalize())
+                val downloadedTo = checkNotNull(downloadMps(settings, mpsDir)) { "No MPS version or location specified" }
+                if (mpsDirCurrent.exists()) {
+                    mpsDirCurrent.deleteRecursively()
+                }
+                downloadedTo.copyRecursively(mpsDirCurrent, overwrite = true)
             }
-            downloadedTo.copyRecursively(mpsDirCurrent, overwrite = true)
         }
         settings.getTaskDependencies().forEach { taskCopyDependencies.dependsOn(it) }
 
@@ -234,6 +236,7 @@ class MPSBuildPlugin : Plugin<Project> {
             standardOutput = System.out
             errorOutput = System.err
             standardInput = System.`in`
+            settings.javaHome?.let { environment("JAVA_HOME", it.absolutePath) }
         }
         taskAssembleMpsModules.dependsOn(taskGenerateAntScript)
 
@@ -674,6 +677,7 @@ class MPSBuildPlugin : Plugin<Project> {
 
     private fun generateAntScript(generator: BuildScriptGenerator, antScriptFile: File): BuildScriptGenerator {
         val xml = generator.generateXML()
+        antScriptFile.parentFile.mkdirs()
         antScriptFile.writeText(xml)
         return generator
     }
@@ -695,7 +699,9 @@ class MPSBuildPlugin : Plugin<Project> {
             if (!mpsHome.exists()) {
                 throw RuntimeException("$mpsHome doesn't exist")
             }
-            modulesMiner.searchInFolder(mpsHome)
+            if (!dependencyFiles.contains(mpsHome)) {
+                modulesMiner.searchInFolder(mpsHome)
+            }
         }
         val resolver = ModuleResolver(modulesMiner.getModules(), emptySet())
         val modulesToGenerate = settings.getPublications()
