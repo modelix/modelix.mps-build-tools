@@ -12,7 +12,7 @@ repositories {
 dependencies {
     implementation(project(":build-tools-lib"))
     implementation(project(":build-tools-invoke-lambda"))
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
     implementation("org.zeroturnaround:zt-zip:1.14")
     testImplementation("junit:junit:4.13.2")
 }
