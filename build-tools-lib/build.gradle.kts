@@ -5,11 +5,12 @@ plugins {
 }
 
 dependencies {
-    implementation("org.zeroturnaround:zt-zip:1.14")
-    implementation("org.apache.commons:commons-text:1.10.0")
-    implementation("commons-io:commons-io:2.15.1")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.0")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.0")
+    implementation(libs.apache.commons.io)
+    implementation(libs.zt.zip)
+    implementation(libs.apache.commons.text)
+    implementation(libs.apache.commons.io)
+    testImplementation(libs.junit.jupiter.api)
+    testRuntimeOnly(libs.junit.jupiter.engine)
 }
 
 val versionGenDir: Provider<Directory> = project.layout.buildDirectory.dir("version_gen")

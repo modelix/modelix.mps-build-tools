@@ -11,10 +11,10 @@ buildscript {
 }
 
 plugins {
-    kotlin("jvm") version "1.9.23" apply false
-    kotlin("plugin.serialization") version "1.9.23" apply false
+    alias(libs.plugins.kotlin.jvm) apply false
+    alias(libs.plugins.kotlin.serialization) apply false
     `maven-publish`
-    id("com.palantir.git-version") version "0.13.0"
+    alias(libs.plugins.gitVersion)
 }
 
 val githubCredentials = if (project.hasProperty("gpr.user") && project.hasProperty("gpr.key")) {
