@@ -114,8 +114,8 @@ class MPSBuildPlugin : Plugin<Project> {
         mpsDirCurrent = settings.mpsHome?.let { File(it) } ?: mpsDir.resolve("current")
 
         taskBody(taskCopyDependencies) {
+            copyDependencies(settings.dependenciesConfig, dependenciesDir.normalize())
             if (settings.mpsHome == null) {
-                copyDependencies(settings.dependenciesConfig, dependenciesDir.normalize())
                 val downloadedTo = checkNotNull(downloadMps(settings, mpsDir)) { "No MPS version or location specified" }
                 if (mpsDirCurrent.exists()) {
                     mpsDirCurrent.deleteRecursively()
