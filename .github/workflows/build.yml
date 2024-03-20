@@ -10,18 +10,10 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
         mpsversion: [ "2020.3.6", "2021.1.4", "2021.2.6", "2021.3.4", "2022.2.1", "2022.3", "2023.2" ]
-        javaversion: [ 17 ]
-        include:
-        - mpsversion: "2020.3.6"
-          javaversion: 11
-        - mpsversion: "2021.1.4"
-          javaversion: 11
-        - mpsversion: "2021.2.6"
-          javaversion: 11
-        - mpsversion: "2021.3.4"
-          javaversion: 11
+        javaversion: [ 21 ]
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK
