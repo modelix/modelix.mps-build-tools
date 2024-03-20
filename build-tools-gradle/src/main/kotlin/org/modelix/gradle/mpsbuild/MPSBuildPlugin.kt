@@ -354,7 +354,7 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
             }
 
             val parentPublicationName = settings.parentPublicationName
-            if (parentPublicationName != null) {
+            if (parentPublicationName != null && settings.getPublications().isNotEmpty()) {
                 create("_${parentPublicationName}_", MavenPublication::class.java) {
                     val publication = this
                     publication.groupId = project.group.toString()
