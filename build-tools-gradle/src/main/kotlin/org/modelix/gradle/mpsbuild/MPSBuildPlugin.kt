@@ -541,7 +541,7 @@ class MPSBuildPlugin : Plugin<Project> {
         val generateTask = project.tasks.register(taskName + "_generate", GenerateMPSRunnerFilesTask::class.java) {
             val task = this
             dependsOn(*taskDependencies)
-            if (config.get().mpsHome == mpsDirCurrent) task.dependsOn(taskCopyDependencies)
+            task.dependsOn(taskCopyDependencies)
             task.config.set(config)
 
             outputs.file(config.map { MPSRunner(it).getAntScriptFile() })
