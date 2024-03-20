@@ -18,6 +18,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.getValue
@@ -39,7 +40,10 @@ open class MPSBuildSettings(val project: Project) {
     var mpsDependenciesConfig: Configuration? = null
     var parentPublicationName: String? = "all"
     private val publications: MutableMap<String, PublicationSettings> = LinkedHashMap()
-    var mpsHome: String? = null
+
+    var mpsHome: String?
+        get() = mpsHome_property.map { it.asFile.absolutePath }.orNull
+        set(value) { mpsHome_property.set(value?.let { File(it) }) }
 
     /**
      * The JAVA_HOME used when running the ANT script
@@ -54,6 +58,8 @@ open class MPSBuildSettings(val project: Project) {
     private var mpsDownloadUrl: URL? = null
     private val taskDependencies: MutableList<Any> = ArrayList()
     internal val runConfigs: MutableMap<String, RunMPSTaskConfig> = HashMap()
+
+    val mpsHome_property: DirectoryProperty = project.objects.directoryProperty()
 
     fun getTaskDependencies(): List<Any> = taskDependencies
 
@@ -114,7 +120,7 @@ open class MPSBuildSettings(val project: Project) {
     }
 
     fun mpsHome(value: String) {
-        mpsHome = value
+        mpsHome_property.set(File(value))
     }
 
     fun usingExistingMps(): Boolean {
