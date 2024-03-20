@@ -856,38 +856,38 @@ class BuildScriptGenerator(val modulesMiner: ModulesMiner,
 
     companion object {
         fun getMpsAntLibraries(mpsVersion: String): List<String> {
-            return if (mpsVersion < "2021.2") {
+            val majorVersion = mpsVersion.replace(Regex("""(20\d\d\.\d+).*"""), "$1")
+            return when (majorVersion) {
                 // https://raw.githubusercontent.com/JetBrains/MPS/2021.1/plugins/mps-build/solutions/mpsBuild/source_gen/jetbrains/mps/ide/build/mpsBootstrapCore.xml
-                listOf(
+                "2021.1" -> listOf(
                     "lib/ant/lib/ant-mps.jar",
                     "lib/log4j.jar",
                     "lib/jdom.jar",
                 )
-            } else if (mpsVersion < "2021.3") {
                 // https://raw.githubusercontent.com/JetBrains/MPS/2021.2/plugins/mps-build/solutions/mpsBuild/source_gen/jetbrains/mps/ide/build/mpsBootstrapCore.xml
-                listOf(
+                "2021.2" -> listOf(
                     "lib/ant/lib/ant-mps.jar",
                     "lib/util.jar"
                 )
-            } else if (mpsVersion < "2022.3") {
+                // https://raw.githubusercontent.com/JetBrains/MPS/2021.3/plugins/mps-build/solutions/mpsBuild/source_gen/jetbrains/mps/ide/build/mpsBootstrapCore.xml
                 // https://raw.githubusercontent.com/JetBrains/MPS/2022.2/plugins/mps-build/solutions/mpsBuild/source_gen/jetbrains/mps/ide/build/mpsBootstrapCore.xml
-                listOf(
+                "2021.3", "2022.2" -> listOf(
                     "lib/ant/lib/ant-mps.jar",
                     "lib/util.jar",
                     "lib/3rd-party-rt.jar"
                 )
-            } else if (mpsVersion < "2023.1") {
                 // https://raw.githubusercontent.com/JetBrains/MPS/2022.3/plugins/mps-build/solutions/mpsBuild/source_gen/jetbrains/mps/ide/build/mpsBootstrapCore.xml
-                listOf(
+                "2022.3" -> listOf(
                     "lib/ant/lib/ant-mps.jar",
                     "lib/util.jar"
                 )
-            } else {
-                // https://raw.githubusercontent.com/JetBrains/MPS/master/plugins/mps-build/solutions/mpsBuild/source_gen/jetbrains/mps/ide/build/mpsBootstrapCore.xml
-                listOf(
+                // https://raw.githubusercontent.com/JetBrains/MPS/2023.2/plugins/mps-build/solutions/mpsBuild/source_gen/jetbrains/mps/ide/build/mpsBootstrapCore.xml
+                // https://raw.githubusercontent.com/JetBrains/MPS/2023.3/plugins/mps-build/solutions/mpsBuild/source_gen/jetbrains/mps/ide/build/mpsBootstrapCore.xml
+                "2023.2", "2023.3" -> listOf(
                     "lib/ant/lib/ant-mps.jar",
                     "lib/util-8.jar"
                 )
+                else -> error("Unknown MPS version: $mpsVersion ($majorVersion)")
             }
         }
     }
