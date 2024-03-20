@@ -23,6 +23,7 @@ import java.util.zip.ZipEntry
 
 class ModulesMiner() {
 
+    private val searchedFolders: MutableSet<File> = HashSet()
     private val modules: FoundModules = FoundModules()
 
     fun getModules(): FoundModules {
@@ -52,6 +53,9 @@ class ModulesMiner() {
     }
 
     private fun collectModules(file: File, virtualFolder: String?, owner: ModuleOwner?, origin: ModuleOrigin, fileFilter: (File)->Boolean) {
+        if (searchedFolders.contains(file)) return
+        searchedFolders.add(file)
+
         if (isIgnored(file, fileFilter)) return
         if (file.isFile) {
             when (file.extension.lowercase()) {
