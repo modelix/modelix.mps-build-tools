@@ -13,9 +13,11 @@
  */
 package org.modelix.buildtools
 
-class ModuleResolver(val availableModules: FoundModules,
-                     val ignoredModules: Set<ModuleId>,
-                     val ignoreAllMissing: Boolean = false) {
+class ModuleResolver(
+    val availableModules: FoundModules,
+    val ignoredModules: Set<ModuleId>,
+    val ignoreAllMissing: Boolean = false,
+) {
     fun resolveModule(dep: ModuleDependency, usedBy: FoundModule, required: Boolean = true): FoundModule? {
         return resolveModule(ModuleIdAndName(dep.id, dep.moduleName), usedBy, required)
     }

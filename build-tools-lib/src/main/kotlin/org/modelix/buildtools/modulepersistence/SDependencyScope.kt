@@ -29,7 +29,7 @@ package org.modelix.buildtools.modulepersistence
  *
  */
 enum class SDependencyScope(private val myIdentity: String, private val myPresentation: String) {
-    /* all types of modules */
+    // all types of modules
     DEFAULT("regular", "Default"),
 
     /**
@@ -38,7 +38,7 @@ enum class SDependencyScope(private val myIdentity: String, private val myPresen
      * DESIGN dependency serves primarily the purpose to declare priorities between generator without actually
      * enforcing inclusion of all dependant generators into generation process.
      */
-    DESIGN("design", "Design"), COMPILE("compile", "Compile"), RUNTIME("rt", "Runtime"), PROVIDED("external", "Provided"),  /* only between language modules  */
+    DESIGN("design", "Design"), COMPILE("compile", "Compile"), RUNTIME("rt", "Runtime"), PROVIDED("external", "Provided"), // only between language modules
 
     /**
      * Applicable between either two language or two generator modules
@@ -59,7 +59,8 @@ enum class SDependencyScope(private val myIdentity: String, private val myPresen
      * Given L1 and L2, with L1 GENERATES_INTO L2, L2 with run-time solution S2, and model M1 using L1, the dependency tells to include S2 of L2
      * as a runtime dependency for M1 outcome.
      */
-    GENERATES_INTO("generate-into", "Generation Target");
+    GENERATES_INTO("generate-into", "Generation Target"),
+    ;
 
     override fun toString(): String {
         return myPresentation

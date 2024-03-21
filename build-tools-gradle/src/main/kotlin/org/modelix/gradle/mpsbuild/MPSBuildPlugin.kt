@@ -78,14 +78,14 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
 
     private fun newTask(name: String): Task = project.task(name)
 
-    private fun newTask(name: String, body: ()->Unit): Task {
+    private fun newTask(name: String, body: () -> Unit): Task {
         return project.task(name) {
             val action = Action<Task> { body() }
             this.actions = listOf(action)
         }
     }
 
-    private fun taskBody(task: Task, body: ()->Unit) {
+    private fun taskBody(task: Task, body: () -> Unit) {
         val action = Action<Task> { body() }
         task.actions = listOf(action)
     }
@@ -132,7 +132,7 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
         taskGenerateAntScript.dependsOn(taskCopyDependencies)
 
         lateinit var publication2dnode: Map<MPSBuildSettings.PublicationSettings, DependencyGraph<FoundModule, ModuleId>.DependencyNode>
-        lateinit var getPublication: (DependencyGraph<FoundModule, ModuleId>.DependencyNode)->MPSBuildSettings.PublicationSettings?
+        lateinit var getPublication: (DependencyGraph<FoundModule, ModuleId>.DependencyNode) -> MPSBuildSettings.PublicationSettings?
 
         taskBody(taskCheckConfig) {
             val resolver = ModuleResolver(generator.modulesMiner.getModules(), generator.ignoredModules)
@@ -178,7 +178,7 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
             }
             checkCyclesBetweenPublications()
 
-            val ensurePublicationsNotMerged: ()->Unit = {
+            val ensurePublicationsNotMerged: () -> Unit = {
                 for (publicationA in publication2dnode) {
                     for (publicationB in publication2dnode) {
                         if (publicationA.key == publicationB.key) continue
@@ -300,7 +300,7 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
                 zipFile.parentFile.mkdirs()
                 zipFile.outputStream().use { os ->
                     ZipOutputStream(os).use { zipStream ->
-                        val packFile: (File, Path, Path)->Unit = { file, path, parent ->
+                        val packFile: (File, Path, Path) -> Unit = { file, path, parent ->
                             val relativePath = parent.relativize(path).toString()
                             require(!path.toString().startsWith("..") && !path.toString().contains("/../")) {
                                 "$file expected to be inside $parent"
@@ -337,7 +337,7 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
         val publishing = project.extensions.findByType(PublishingExtension::class.java)
         publishing?.publications {
             for (publicationData in settings.getPublications()) {
-                create("_"+ publicationData.name + "_", MavenPublication::class.java) {
+                create("_" + publicationData.name + "_", MavenPublication::class.java) {
                     val publication = this
                     mavenPublications[publicationData] = publication
                     publication.groupId = project.group.toString()
@@ -387,17 +387,21 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
             project.tasks.register("publishAllMpsPublicationsTo${repo.name.firstLetterUppercase()}Repository") {
                 group = "publishing"
                 description = "Publishes all Maven publications created by the mpsbuild plugin"
-                dependsOn(project.tasks.withType(PublishToMavenRepository::class.java).matching {
-                    it.repository == repo && ownArtifactNames.contains(it.publication.artifactId)
-                })
+                dependsOn(
+                    project.tasks.withType(PublishToMavenRepository::class.java).matching {
+                        it.repository == repo && ownArtifactNames.contains(it.publication.artifactId)
+                    },
+                )
             }
         }
         project.tasks.register("publishAllMpsPublications") {
             group = "publishing"
             description = "Publishes all Maven publications created by the mpsbuild plugin"
-            dependsOn(project.tasks.withType(PublishToMavenRepository::class.java).matching {
-                ownArtifactNames.contains(it.publication.artifactId)
-            })
+            dependsOn(
+                project.tasks.withType(PublishToMavenRepository::class.java).matching {
+                    ownArtifactNames.contains(it.publication.artifactId)
+                },
+            )
         }
 
         if (settings.runConfigs.isNotEmpty()) {
@@ -421,7 +425,7 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
 
                     val resourceURI = implClass.getResourceName().let {
                         checkNotNull(implClass.getResource(it)) { "Resource not found: $it" }
-                    } .toURI()
+                    }.toURI()
                     val scriptClassesFolderOrJar = if (resourceURI.scheme == "jar") {
                         URI.create(resourceURI.schemeSpecificPart.substringBefore("!")).toPath()
                     } else {
@@ -437,7 +441,7 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
                         config.copy(
                             mainClassName = InvokeLambda::class.java.name,
                             mainMethodName = InvokeLambda::invoke.name,
-                            jvmArgs = config.jvmArgs + "-D${InvokeLambda.PROPERTY_KEY}=${serializedLambdaFile.get().absolutePath}"
+                            jvmArgs = config.jvmArgs + "-D${InvokeLambda.PROPERTY_KEY}=${serializedLambdaFile.get().absolutePath}",
                         )
                     }
                     project.tasks.register(entry.key + "_exportImpl") {
@@ -457,7 +461,7 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
                         val resolvedClasspath = taskConfig.classPathFromConfigurations
                             .flatMap { it.resolvedConfiguration.files }
                         config.copy(
-                            classPathElements = config.classPathElements + resolvedClasspath
+                            classPathElements = config.classPathElements + resolvedClasspath,
                         )
                     } else {
                         config
@@ -468,7 +472,7 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
                     taskName = entry.key,
                     config = config,
                     taskDependencies = listOfNotNull(exportImplTask, taskCopyDependencies).plus(taskConfig.taskDependencies).toTypedArray(),
-                    taskSubclass = RunMPSTask::class.java
+                    taskSubclass = RunMPSTask::class.java,
                 ).also {
                     it.configure {
                         result = taskConfig.result
@@ -483,7 +487,7 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
         var config = config
         if (config.buildDir == null) {
             config = config.copy(
-                buildDir = project.layout.buildDirectory.asFile.get().resolve("runMPS").resolve(taskName)
+                buildDir = project.layout.buildDirectory.asFile.get().resolve("runMPS").resolve(taskName),
             )
         }
         if (config.workDir == null) {
@@ -501,7 +505,7 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
             taskName,
             project.objects.property<MPSRunnerConfig>().also { it.set(config) },
             taskDependencies,
-            RunMPSTask::class.java
+            RunMPSTask::class.java,
         )
     }
 
@@ -509,13 +513,13 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
         taskName: String,
         config: MPSRunnerConfig,
         taskDependencies: Array<Any> = emptyArray(),
-        taskSubclass: Class<TaskT>
+        taskSubclass: Class<TaskT>,
     ): TaskProvider<TaskT> {
         return createRunMPSTask(
             taskName,
             project.objects.property<MPSRunnerConfig>().also { it.set(config) },
             taskDependencies,
-            taskSubclass
+            taskSubclass,
         )
     }
 
@@ -523,7 +527,7 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
         taskName: String,
         config: Provider<MPSRunnerConfig>,
         taskDependencies: Array<Any> = emptyArray(),
-        taskSubclass: Class<TaskT>
+        taskSubclass: Class<TaskT>,
     ): TaskProvider<TaskT> {
         var config = config.map { initializeBuildAndWorkDir(taskName, it) }
 
@@ -653,7 +657,7 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
     private fun generateVersionNumber(mpsVersion: String?): String {
         val timestamp = SimpleDateFormat("yyyyMMddHHmm").format(Date())
         val version = if (mpsVersion == null) timestamp else "$mpsVersion-$timestamp"
-        println("##teamcity[buildNumber '${version}']")
+        println("##teamcity[buildNumber '$version']")
         return version
     }
 
@@ -662,7 +666,7 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
         StubsSolutionGenerator(
             solutionIdAndName = ModuleIdAndName(ModuleId("~$solutionName"), solutionName),
             jarPaths = dependency.moduleArtifacts.map { it.file }.filter { it.extension == "jar" }.map { it.absolutePath }.distinct(),
-            moduleDependencies = dependency.children.map { getStubSolutionName(it) }.map { ModuleIdAndName(ModuleId("~$solutionName"), solutionName) }
+            moduleDependencies = dependency.children.map { getStubSolutionName(it) }.map { ModuleIdAndName(ModuleId("~$solutionName"), solutionName) },
         ).generateFile(stubsDir.resolve(solutionName).resolve("$solutionName.msd"))
     }
 
@@ -695,10 +699,12 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
         return generator
     }
 
-    private fun createBuildScriptGenerator(settings: MPSBuildSettings,
-                                           project: Project,
-                                           buildDir: File,
-                                           dependencyFiles: Set<File>): BuildScriptGenerator {
+    private fun createBuildScriptGenerator(
+        settings: MPSBuildSettings,
+        project: Project,
+        buildDir: File,
+        dependencyFiles: Set<File>,
+    ): BuildScriptGenerator {
         val modulesMiner = ModulesMiner()
         for (modulePath in settings.resolveModulePaths(project.projectDir.toPath())) {
             modulesMiner.searchInFolder(modulePath.toFile())
@@ -724,13 +730,15 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
             modulesToGenerate = modulesToGenerate,
             ignoredModules = emptySet(),
             initialMacros = settings.getMacros(project.projectDir.toPath()),
-            buildDir = buildDir
+            buildDir = buildDir,
         )
         generator.generatorHeapSize = settings.generatorHeapSize
         generator.ideaPlugins += settings.getPublications().flatMap { it.ideaPlugins }.map { pluginSettings ->
             val moduleName = pluginSettings.getImplementationModuleName()
-            val module = (modulesMiner.getModules().getModules().values.find { it.name == moduleName }
-                ?: throw RuntimeException("module $moduleName not found"))
+            val module = (
+                modulesMiner.getModules().getModules().values.find { it.name == moduleName }
+                    ?: throw RuntimeException("module $moduleName not found")
+                )
             BuildScriptGenerator.IdeaPlugin(module, "" + project.version, pluginSettings.pluginXml)
         }
         return generator
@@ -784,7 +792,7 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
                     .resolve("modules")
                     .resolve(dependency.moduleGroup)
                     .resolve(dependency.moduleName)
-                    //.resolve(file.name)
+                // .resolve(file.name)
                 folder2owningDependency[targetFile.absoluteFile.toPath().normalize()] = dependency
                 copyAndUnzip(file, targetFile)
             }

@@ -16,16 +16,15 @@ package org.modelix.buildtools
 
 class PublicationDependencyGraph(
     val resolver: ModuleResolver,
-    additionalGenerationDependencies: Map<ModuleId, Set<ModuleId>>
+    additionalGenerationDependencies: Map<ModuleId, Set<ModuleId>>,
 ) : GeneratorDependencyGraph(resolver, additionalGenerationDependencies) {
 
     override fun getDependencies(element: FoundModule): Iterable<FoundModule> {
         return (super.getDependencies(element) + element.getClassPathDependencies(resolver))
-            //.filter { it.owner is SourceModuleOwner }
+            // .filter { it.owner is SourceModuleOwner }
             .toSet()
     }
 
     override fun postprocess() {
-
     }
 }

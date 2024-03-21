@@ -18,13 +18,13 @@ plugins {
 }
 
 val githubCredentials = if (project.hasProperty("gpr.user") && project.hasProperty("gpr.key")) {
-        project.findProperty("gpr.user").toString() to project.findProperty("gpr.key").toString()
-    } else if (System.getenv("GITHUB_ACTOR") != null && System.getenv("GITHUB_TOKEN") != null) {
-        System.getenv("GITHUB_ACTOR") to System.getenv("GITHUB_TOKEN")
-    } else {
-        logger.error("Please specify your github username (gpr.user) and access token (gpr.key) in ~/.gradle/gradle.properties")
-        null
-    }
+    project.findProperty("gpr.user").toString() to project.findProperty("gpr.key").toString()
+} else if (System.getenv("GITHUB_ACTOR") != null && System.getenv("GITHUB_TOKEN") != null) {
+    System.getenv("GITHUB_ACTOR") to System.getenv("GITHUB_TOKEN")
+} else {
+    logger.error("Please specify your github username (gpr.user) and access token (gpr.key) in ~/.gradle/gradle.properties")
+    null
+}
 
 group = "org.modelix.mps"
 description = "Replacement for the MPS build language"
@@ -73,10 +73,11 @@ subprojects {
             if (project.hasProperty("artifacts.itemis.cloud.user")) {
                 maven {
                     name = "itemisNexus3"
-                    url = if (version.toString().contains("SNAPSHOT"))
+                    url = if (version.toString().contains("SNAPSHOT")) {
                         uri("https://artifacts.itemis.cloud/repository/maven-mps-snapshots/")
-                    else
+                    } else {
                         uri("https://artifacts.itemis.cloud/repository/maven-mps-releases/")
+                    }
                     credentials {
                         username = project.findProperty("artifacts.itemis.cloud.user").toString()
                         password = project.findProperty("artifacts.itemis.cloud.pw").toString()

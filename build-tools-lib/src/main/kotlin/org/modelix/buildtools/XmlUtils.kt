@@ -26,7 +26,7 @@ import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
 
-fun Node.visitAll(visitor: (Node)->Unit) {
+fun Node.visitAll(visitor: (Node) -> Unit) {
     visitor(this)
     val childNodes = this.childNodes
     for (i in 0 until childNodes.length) childNodes.item(i).visitAll(visitor)
@@ -57,14 +57,14 @@ fun Node.childElements(tag: String): List<Element> = children().filterIsInstance
 
 fun Node.document(): Document = if (this is Document) this else ownerDocument
 
-fun Node.newChild(tag: String, body: Element.()->Unit): Element {
+fun Node.newChild(tag: String, body: Element.() -> Unit): Element {
     val child = document().createElement(tag)
     appendChild(child)
     child.apply(body)
     return child
 }
 
-fun Node.newChild(tag: String, text: String, body: (Element.()->Unit)? = null): Element {
+fun Node.newChild(tag: String, text: String, body: (Element.() -> Unit)? = null): Element {
     val child = document().createElement(tag)
     appendChild(child)
     child.appendChild(document().createTextNode(text))
@@ -106,7 +106,7 @@ fun xmlToString(doc: Document): String {
 fun readXmlFile(file: File): Document {
     try {
         val dbf = DocumentBuilderFactory.newInstance()
-        //dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true)
+        // dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true)
         disableDTD(dbf)
         val db = dbf.newDocumentBuilder()
         return db.parse(file)
@@ -117,24 +117,24 @@ fun readXmlFile(file: File): Document {
 
 fun readXmlFile(file: InputStream, name: String? = null): Document {
     val dbf = DocumentBuilderFactory.newInstance()
-    //dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true)
+    // dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true)
     disableDTD(dbf)
     val db = dbf.newDocumentBuilder()
     return db.parse(file, name)
 }
 
 private fun disableDTD(dbf: DocumentBuilderFactory) {
-    dbf.setValidating(false);
-    dbf.setNamespaceAware(true);
-    dbf.setFeature("http://xml.org/sax/features/namespaces", false);
-    dbf.setFeature("http://xml.org/sax/features/validation", false);
-    dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-dtd-grammar", false);
-    dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+    dbf.setValidating(false)
+    dbf.setNamespaceAware(true)
+    dbf.setFeature("http://xml.org/sax/features/namespaces", false)
+    dbf.setFeature("http://xml.org/sax/features/validation", false)
+    dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-dtd-grammar", false)
+    dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
 }
 
-fun newXmlDocument(body: (Document.()->Unit)? = null): Document {
+fun newXmlDocument(body: (Document.() -> Unit)? = null): Document {
     val dbf = DocumentBuilderFactory.newInstance()
-    //dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true)
+    // dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true)
     val db = dbf.newDocumentBuilder()
     val doc = db.newDocument()
     if (body != null) {

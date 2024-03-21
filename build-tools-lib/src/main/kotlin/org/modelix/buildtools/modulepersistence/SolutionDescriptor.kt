@@ -18,7 +18,7 @@ import org.modelix.buildtools.getAttribute
 import org.modelix.buildtools.getAttributeOrNull
 import org.w3c.dom.Element
 
-class SolutionDescriptor(xml: Element): ModuleDescriptor(xml) {
+class SolutionDescriptor(xml: Element) : ModuleDescriptor(xml) {
     val pluginKind: SolutionKind?
     val compileInMps: Boolean
     val compileInIdea: Boolean
@@ -29,6 +29,5 @@ class SolutionDescriptor(xml: Element): ModuleDescriptor(xml) {
         compileInMps = xml.getAttribute("compileInMPS", "false").toBoolean()
         compileInIdea = xml.findTag("compileInIDEA") != null
         readOnlyStubs = xml.findTag("readOnlyStubs") != null
-
     }
 }

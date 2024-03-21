@@ -68,14 +68,16 @@ class FoundModules {
             if (existing == module) return
             if (existing != null) {
                 if (existing.owner != module.owner) {
-                    println("""
+                    println(
+                        """
                         Duplicate module ${module.moduleId}
                             in  ${module.owner.path.getLocalAbsolutePath()} (ignored)
                             and ${existing.owner.path.getLocalAbsolutePath()}
-                    """.trimIndent())
+                        """.trimIndent(),
+                    )
                     // throw RuntimeException("Module ${module.moduleId} (${module.name}) already exists")
                 }
-                //existing.dependencies += module.dependencies
+                // existing.dependencies += module.dependencies
             } else {
                 modules[module.moduleId] = module
                 if (module.owner is PluginModuleOwner) {
@@ -83,7 +85,6 @@ class FoundModules {
                     if (pluginId != null) plugins += pluginId to module.owner
                 }
             }
-
         }
     }
 

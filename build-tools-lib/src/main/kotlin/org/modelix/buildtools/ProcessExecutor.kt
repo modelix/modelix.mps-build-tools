@@ -13,12 +13,15 @@
  */
 package org.modelix.buildtools
 
-import java.io.*
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStream
+import java.io.InputStreamReader
 import java.util.concurrent.TimeUnit
 import kotlin.math.max
 
 open class ProcessExecutor() {
-    var outputHandler: (String)->Unit = { println(it) }
+    var outputHandler: (String) -> Unit = { println(it) }
     var timeoutSeconds: Int = 600
 
     @Throws(IOException::class, InterruptedException::class)

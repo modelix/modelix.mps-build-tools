@@ -26,7 +26,8 @@ enum class SolutionKind(private val myPresentation: String) {
     NONE("None"),
     PLUGIN_CORE("Core plugin"),
     PLUGIN_EDITOR("Editor plugin"),
-    PLUGIN_OTHER("Other");
+    PLUGIN_OTHER("Other"),
+    ;
 
     override fun toString(): String {
         return myPresentation

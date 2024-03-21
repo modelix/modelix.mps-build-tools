@@ -34,7 +34,7 @@ class RuntimeDependenciesCollector constructor(private val resolver: ModuleResol
         val langRuntimes = HashSet<FoundModule>()
         for (lang in usedLanguages.includingExtendedLanguages()) {
             langRuntimes.addAll(
-                (lang.moduleDescriptor as LanguageDescriptor).runtime.map { it.idAndName }.resolveAll(lang)
+                (lang.moduleDescriptor as LanguageDescriptor).runtime.map { it.idAndName }.resolveAll(lang),
             )
         }
 
@@ -68,7 +68,7 @@ class RuntimeDependenciesCollector constructor(private val resolver: ModuleResol
 data class RuntimeDependencies(
     val usedLanguages: Set<FoundModule>,
     val languageRuntimes: Set<FoundModule>,
-    val deploymentDependencies: Set<FoundModule>
+    val deploymentDependencies: Set<FoundModule>,
 ) {
     companion object {
         fun forModule(module: FoundModule, resolver: ModuleResolver): RuntimeDependencies =

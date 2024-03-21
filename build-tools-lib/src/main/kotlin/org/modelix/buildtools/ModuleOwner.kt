@@ -13,8 +13,12 @@
  */
 package org.modelix.buildtools
 
-import org.modelix.buildtools.modulepersistence.*
-import java.io.File
+import org.modelix.buildtools.modulepersistence.DeploymentDescriptor
+import org.modelix.buildtools.modulepersistence.DevkitDescriptor
+import org.modelix.buildtools.modulepersistence.GeneratorDescriptor
+import org.modelix.buildtools.modulepersistence.LanguageDescriptor
+import org.modelix.buildtools.modulepersistence.ModuleDescriptor
+import org.modelix.buildtools.modulepersistence.SolutionDescriptor
 import kotlin.io.path.pathString
 
 abstract class ModuleOwner(val path: ModulePath) {

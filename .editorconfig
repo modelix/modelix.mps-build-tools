@@ -6,4 +6,4 @@ end_of_line = lf
 insert_final_newline = true
 
 [*.kt]
-#ktlint_standard_class-naming = disabled
+ktlint_standard_filename = disabled

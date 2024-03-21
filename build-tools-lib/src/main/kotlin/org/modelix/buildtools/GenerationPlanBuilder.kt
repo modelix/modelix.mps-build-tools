@@ -17,7 +17,7 @@ import kotlin.math.max
 
 class GenerationPlanBuilder(
     val resolver: ModuleResolver,
-    val additionalGenerationDependencies: Map<ModuleId, Set<ModuleId>>
+    val additionalGenerationDependencies: Map<ModuleId, Set<ModuleId>>,
 ) {
     val plan: GenerationPlan = GenerationPlan()
     private val processedNodes: MutableSet<DependencyGraph<FoundModule, ModuleId>.DependencyNode> = HashSet()

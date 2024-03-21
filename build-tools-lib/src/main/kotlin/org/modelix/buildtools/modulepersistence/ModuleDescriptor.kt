@@ -13,7 +13,12 @@
  */
 package org.modelix.buildtools.modulepersistence
 
-import org.modelix.buildtools.*
+import org.modelix.buildtools.Macros
+import org.modelix.buildtools.ModuleId
+import org.modelix.buildtools.ModuleIdAndName
+import org.modelix.buildtools.childElements
+import org.modelix.buildtools.getAttribute
+import org.modelix.buildtools.getAttributeOrNull
 import org.w3c.dom.Element
 import java.nio.file.Path
 import java.nio.file.Paths

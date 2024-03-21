@@ -13,7 +13,11 @@
  */
 package org.modelix.buildtools.modulepersistence
 
-import org.modelix.buildtools.*
+import org.modelix.buildtools.ModuleId
+import org.modelix.buildtools.ModuleIdAndName
+import org.modelix.buildtools.ModuleType
+import org.modelix.buildtools.childElements
+import org.modelix.buildtools.getAttributeOrNull
 import org.w3c.dom.Element
 import java.nio.file.Path
 
@@ -33,8 +37,8 @@ class DeploymentDescriptor(val xml: Element) {
         require(idString.isNotEmpty()) { "uuid missing" }
         id = ModuleId(idString)
         name = xml.getAttributeOrNull("namespace")
-                ?: xml.getAttributeOrNull("name")
-                ?: throw RuntimeException("name missing")
+            ?: xml.getAttributeOrNull("name")
+            ?: throw RuntimeException("name missing")
         type = when (val typeString = xml.getAttribute("type")) {
             "solution" -> ModuleType.Solution
             "language" -> ModuleType.Language

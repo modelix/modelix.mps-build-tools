@@ -34,7 +34,7 @@
           <param name="LevelMin" value="INFO"/>
       </filter>
   </appender>
-  
+
   <appender name="CONSOLE-WARN" class="org.apache.log4j.ConsoleAppender">
       <param name="follow" value="true"/>
       <param name="target" value="System.err"/>
