@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mpsversion: [ "2020.3.6", "2021.1.4", "2021.2.6", "2021.3.4", "2022.2.1", "2022.3", "2023.2" ]
+        mpsversion: [ "2020.3.6", "2021.1.4", "2021.2.6", "2021.3.5", "2022.2.2", "2022.3.1", "2023.2", "2023.3" ]
         javaversion: [ 21 ]
     steps:
       - uses: actions/checkout@v3
