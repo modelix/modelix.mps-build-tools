@@ -13,7 +13,11 @@
  */
 package org.modelix.buildtools
 
-import org.modelix.buildtools.modulepersistence.*
+import org.modelix.buildtools.modulepersistence.DeploymentDescriptor
+import org.modelix.buildtools.modulepersistence.DevkitDescriptor
+import org.modelix.buildtools.modulepersistence.GeneratorDescriptor
+import org.modelix.buildtools.modulepersistence.LanguageDescriptor
+import org.modelix.buildtools.modulepersistence.SolutionDescriptor
 import org.w3c.dom.Element
 import org.zeroturnaround.zip.ZipUtil
 import java.io.File
@@ -23,6 +27,7 @@ import java.util.zip.ZipEntry
 
 class ModulesMiner() {
 
+    private val searchedFolders: MutableSet<File> = HashSet()
     private val modules: FoundModules = FoundModules()
 
     fun getModules(): FoundModules {
@@ -33,7 +38,7 @@ class ModulesMiner() {
         searchInFolder(folder) { true }
     }
 
-    fun searchInFolder(folder: File, fileFilter: (File)->Boolean) {
+    fun searchInFolder(folder: File, fileFilter: (File) -> Boolean) {
         searchInFolder(ModuleOrigin(folder.toPath()), fileFilter)
     }
 
@@ -41,17 +46,20 @@ class ModulesMiner() {
         searchInFolder(folder) { true }
     }
 
-    fun searchInFolder(folder: ModuleOrigin, fileFilter: (File)->Boolean) {
+    fun searchInFolder(folder: ModuleOrigin, fileFilter: (File) -> Boolean) {
         collectModules(
             file = folder.localPath.normalize().toFile(),
             virtualFolder = null,
             owner = null,
             origin = folder,
-            fileFilter = fileFilter
+            fileFilter = fileFilter,
         )
     }
 
-    private fun collectModules(file: File, virtualFolder: String?, owner: ModuleOwner?, origin: ModuleOrigin, fileFilter: (File)->Boolean) {
+    private fun collectModules(file: File, virtualFolder: String?, owner: ModuleOwner?, origin: ModuleOrigin, fileFilter: (File) -> Boolean) {
+        if (searchedFolders.contains(file)) return
+        searchedFolders.add(file)
+
         if (isIgnored(file, fileFilter)) return
         if (file.isFile) {
             when (file.extension.lowercase()) {
@@ -100,7 +108,7 @@ class ModulesMiner() {
                             }
                         }
                         val srcAndGeneratorNames: Set<String> = (
-                                setOf(file.nameWithoutExtension + "-src." + file.extension) +
+                            setOf(file.nameWithoutExtension + "-src." + file.extension) +
                                 (file.nameWithoutExtension + "-generator." + file.extension) +
                                 (0..10).map { file.nameWithoutExtension + "-$it-generator." + file.extension }
                             )
@@ -147,13 +155,15 @@ class ModulesMiner() {
                     .filter { !isModuleFileIgnored(it.moduleFile, file, fileFilter) }
 //                println("MPS project found in $file. Loading only modules that are part of the project:")
 //                moduleFiles.forEach { println("    $it") }
-                moduleFiles.forEach { moduleFile -> collectModules(
-                    file = moduleFile.moduleFile,
-                    virtualFolder = moduleFile.virtualFolder,
-                    owner = owner,
-                    origin = origin,
-                    fileFilter = fileFilter
-                ) }
+                moduleFiles.forEach { moduleFile ->
+                    collectModules(
+                        file = moduleFile.moduleFile,
+                        virtualFolder = moduleFile.virtualFolder,
+                        owner = owner,
+                        origin = origin,
+                        fileFilter = fileFilter,
+                    )
+                }
             } else {
                 val pluginXml = File(File(file, "META-INF"), "plugin.xml")
                 val isPluginDir = pluginXml.exists()
@@ -170,18 +180,18 @@ class ModulesMiner() {
                         virtualFolder = null,
                         owner = pluginOwner ?: owner,
                         origin = origin,
-                        fileFilter = fileFilter
+                        fileFilter = fileFilter,
                     )
                 }
             }
         }
     }
 
-    private fun isIgnored(file: File, fileFilter: (File)->Boolean): Boolean {
+    private fun isIgnored(file: File, fileFilter: (File) -> Boolean): Boolean {
         return !fileFilter(file) || File(file, ".mpsbuild-ignore").exists()
     }
 
-    private fun isModuleFileIgnored(file: File, projectDir_: File, fileFilter: (File)->Boolean): Boolean {
+    private fun isModuleFileIgnored(file: File, projectDir_: File, fileFilter: (File) -> Boolean): Boolean {
         val projectDir = projectDir_.canonicalFile
         var currentFile: File? = file.canonicalFile
         while (currentFile != null && currentFile != projectDir) {
@@ -202,7 +212,7 @@ class ModulesMiner() {
         val moduleFiles = moduleElements.map {
             ProjectModule(
                 File(it.getAttribute("path").replace("\$PROJECT_DIR\$", projectDir.absolutePath)),
-                it.getAttribute("folder")
+                it.getAttribute("folder"),
             )
         }
         return moduleFiles.filter { it.moduleFile.exists() && it.moduleFile.isFile }
@@ -277,7 +287,7 @@ class ModulesMiner() {
         }
     }
 
-    private fun visitMPSNodes(parent: Element, visitor: (Element)->Unit) {
+    private fun visitMPSNodes(parent: Element, visitor: (Element) -> Unit) {
         if (parent.tagName == "node") visitor(parent)
         for (childElement in parent.childElements()) {
             visitMPSNodes(childElement, visitor)

@@ -13,7 +13,10 @@
  */
 package org.modelix.buildtools.modulepersistence
 
-import org.modelix.buildtools.*
+import org.modelix.buildtools.ModuleIdAndName
+import org.modelix.buildtools.childElements
+import org.modelix.buildtools.getAttribute
+import org.modelix.buildtools.getAttributeOrNull
 import org.w3c.dom.Element
 
 class GeneratorDescriptor(xml: Element, val languageDescriptor: LanguageDescriptor?) : ModuleDescriptor(xml) {

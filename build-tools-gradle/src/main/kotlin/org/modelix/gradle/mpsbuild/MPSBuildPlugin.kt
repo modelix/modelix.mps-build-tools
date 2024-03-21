@@ -20,7 +20,7 @@ import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ResolvedConfiguration
 import org.gradle.api.artifacts.ResolvedDependency
-import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.tasks.GenerateMavenPom
@@ -57,13 +57,17 @@ import java.util.Date
 import java.util.UUID
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import javax.inject.Inject
 import kotlin.io.path.toPath
 
-class MPSBuildPlugin : Plugin<Project> {
+class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project> {
     private val stubsPattern = Regex("stubs#([^#]+)#([^#]+)#([^#]+)")
-    private lateinit var project: Project
-    private lateinit var settings: MPSBuildSettings
-    private lateinit var mpsDirCurrent: File
+    private val settings: MPSBuildSettings = project.extensions.create("mpsBuild", MPSBuildSettings::class.java)
+    private val mpsDownloadDir = project.objects.directoryProperty()
+        .convention(project.layout.buildDirectory.dir("mps"))
+    private val mpsDirCurrent = project.objects.directoryProperty()
+        .convention(settings.mpsHome_property.orElse(mpsDownloadDir.dir("current")))
+
     private val folder2owningDependency = HashMap<Path, ResolvedDependency>()
 
     lateinit var taskCopyDependencies: Task
@@ -74,22 +78,19 @@ class MPSBuildPlugin : Plugin<Project> {
 
     private fun newTask(name: String): Task = project.task(name)
 
-    private fun newTask(name: String, body: ()->Unit): Task {
+    private fun newTask(name: String, body: () -> Unit): Task {
         return project.task(name) {
             val action = Action<Task> { body() }
             this.actions = listOf(action)
         }
     }
 
-    private fun taskBody(task: Task, body: ()->Unit) {
+    private fun taskBody(task: Task, body: () -> Unit) {
         val action = Action<Task> { body() }
         task.actions = listOf(action)
     }
 
     override fun apply(project: Project) {
-        this.project = project
-        settings = project.extensions.create("mpsBuild", MPSBuildSettings::class.java)
-
         taskCopyDependencies = newTask("copyDependencies")
         taskGenerateAntScript = newTask("generateMpsAntScript")
         taskCheckConfig = newTask("checkMpsbuildConfig")
@@ -103,38 +104,35 @@ class MPSBuildPlugin : Plugin<Project> {
     }
 
     private fun afterEvaluate() {
-        val buildDir = project.buildDir.resolve("mpsbuild").normalize()
-        val dependenciesDir = buildDir.resolve("dependencies")
-        val publicationsDir = buildDir.resolve("publications")
-        val antScriptFile = File(buildDir, "build-modules.xml")
+        val buildDir = project.layout.buildDirectory.dir("mpsbuild")
+        val dependenciesDir = buildDir.map { it.dir("dependencies") }
+        val publicationsDir = buildDir.map { it.dir("publications") }
+        val antScriptFile = buildDir.map { it.file("build-modules.xml") }
         val publicationsVersion = getPublicationsVersion()
         val mavenPublications = HashMap<MPSBuildSettings.PublicationSettings, MavenPublication>()
 
-        val mpsDir = buildDir.resolve("mps")
-        mpsDirCurrent = settings.mpsHome?.let { File(it) } ?: mpsDir.resolve("current")
-
         taskBody(taskCopyDependencies) {
+            copyDependencies(settings.dependenciesConfig, dependenciesDir.get().asFile.normalize())
             if (settings.mpsHome == null) {
-                copyDependencies(settings.dependenciesConfig, dependenciesDir.normalize())
-                val downloadedTo = checkNotNull(downloadMps(settings, mpsDir)) { "No MPS version or location specified" }
-                if (mpsDirCurrent.exists()) {
-                    mpsDirCurrent.deleteRecursively()
+                val downloadedTo = checkNotNull(downloadMps(settings, mpsDownloadDir.get().asFile)) { "No MPS version or location specified" }
+                if (mpsDirCurrent.get().asFile.exists()) {
+                    mpsDirCurrent.get().asFile.deleteRecursively()
                 }
-                downloadedTo.copyRecursively(mpsDirCurrent, overwrite = true)
+                downloadedTo.copyRecursively(mpsDirCurrent.get().asFile, overwrite = true)
             }
         }
         settings.getTaskDependencies().forEach { taskCopyDependencies.dependsOn(it) }
 
         lateinit var generator: BuildScriptGenerator
         taskBody(taskGenerateAntScript) {
-            val dirsToMine = setOfNotNull(dependenciesDir, mpsDirCurrent)
-            generator = createBuildScriptGenerator(settings, project, buildDir, dirsToMine)
-            generateAntScript(generator, antScriptFile)
+            val dirsToMine = setOfNotNull(dependenciesDir.get().asFile, mpsDirCurrent.get().asFile)
+            generator = createBuildScriptGenerator(settings, project, buildDir.get().asFile, dirsToMine)
+            generateAntScript(generator, antScriptFile.get().asFile)
         }
         taskGenerateAntScript.dependsOn(taskCopyDependencies)
 
         lateinit var publication2dnode: Map<MPSBuildSettings.PublicationSettings, DependencyGraph<FoundModule, ModuleId>.DependencyNode>
-        lateinit var getPublication: (DependencyGraph<FoundModule, ModuleId>.DependencyNode)->MPSBuildSettings.PublicationSettings?
+        lateinit var getPublication: (DependencyGraph<FoundModule, ModuleId>.DependencyNode) -> MPSBuildSettings.PublicationSettings?
 
         taskBody(taskCheckConfig) {
             val resolver = ModuleResolver(generator.modulesMiner.getModules(), generator.ignoredModules)
@@ -180,7 +178,7 @@ class MPSBuildPlugin : Plugin<Project> {
             }
             checkCyclesBetweenPublications()
 
-            val ensurePublicationsNotMerged: ()->Unit = {
+            val ensurePublicationsNotMerged: () -> Unit = {
                 for (publicationA in publication2dnode) {
                     for (publicationB in publication2dnode) {
                         if (publicationA.key == publicationB.key) continue
@@ -231,8 +229,8 @@ class MPSBuildPlugin : Plugin<Project> {
         taskCheckConfig.dependsOn(taskGenerateAntScript)
 
         val taskAssembleMpsModules = project.tasks.create("assembleMpsModules", Exec::class.java) {
-            workingDir = antScriptFile.parentFile
-            commandLine = listOf("ant", "-f", antScriptFile.absolutePath, "assemble")
+            workingDir(buildDir.get())
+            commandLine(antScriptFile.map { listOf("ant", "-f", it.asFile.absolutePath, "assemble") }.get())
             standardOutput = System.out
             errorOutput = System.err
             standardInput = System.`in`
@@ -298,11 +296,11 @@ class MPSBuildPlugin : Plugin<Project> {
                 val modules = modulesAndStubs - stubs
                 val generatedFiles = modules.map { it.owner }.filterIsInstance<SourceModuleOwner>()
                     .distinct().flatMap { generator.getGeneratedFiles(it) }.map { it.absoluteFile.normalize() }
-                val zipFile = publicationsDir.resolve("${publication.name}.zip")
+                val zipFile = publicationsDir.get().asFile.resolve("${publication.name}.zip")
                 zipFile.parentFile.mkdirs()
                 zipFile.outputStream().use { os ->
                     ZipOutputStream(os).use { zipStream ->
-                        val packFile: (File, Path, Path)->Unit = { file, path, parent ->
+                        val packFile: (File, Path, Path) -> Unit = { file, path, parent ->
                             val relativePath = parent.relativize(path).toString()
                             require(!path.toString().startsWith("..") && !path.toString().contains("/../")) {
                                 "$file expected to be inside $parent"
@@ -339,14 +337,14 @@ class MPSBuildPlugin : Plugin<Project> {
         val publishing = project.extensions.findByType(PublishingExtension::class.java)
         publishing?.publications {
             for (publicationData in settings.getPublications()) {
-                create("_"+ publicationData.name + "_", MavenPublication::class.java) {
+                create("_" + publicationData.name + "_", MavenPublication::class.java) {
                     val publication = this
                     mavenPublications[publicationData] = publication
                     publication.groupId = project.group.toString()
                     publication.artifactId = publicationData.name.toValidPublicationName()
                     publication.version = publicationsVersion
 
-                    val zipFile = publicationsDir.resolve("${publicationData.name}.zip")
+                    val zipFile = publicationsDir.get().asFile.resolve("${publicationData.name}.zip")
                     val artifact = project.artifacts.add(mpsPublicationsConfig.name, zipFile) {
                         type = "zip"
                         builtBy(taskPackagePublications)
@@ -356,7 +354,7 @@ class MPSBuildPlugin : Plugin<Project> {
             }
 
             val parentPublicationName = settings.parentPublicationName
-            if (parentPublicationName != null) {
+            if (parentPublicationName != null && settings.getPublications().isNotEmpty()) {
                 create("_${parentPublicationName}_", MavenPublication::class.java) {
                     val publication = this
                     publication.groupId = project.group.toString()
@@ -389,28 +387,35 @@ class MPSBuildPlugin : Plugin<Project> {
             project.tasks.register("publishAllMpsPublicationsTo${repo.name.firstLetterUppercase()}Repository") {
                 group = "publishing"
                 description = "Publishes all Maven publications created by the mpsbuild plugin"
-                dependsOn(project.tasks.withType(PublishToMavenRepository::class.java).matching {
-                    it.repository == repo && ownArtifactNames.contains(it.publication.artifactId)
-                })
+                dependsOn(
+                    project.tasks.withType(PublishToMavenRepository::class.java).matching {
+                        it.repository == repo && ownArtifactNames.contains(it.publication.artifactId)
+                    },
+                )
             }
         }
         project.tasks.register("publishAllMpsPublications") {
             group = "publishing"
             description = "Publishes all Maven publications created by the mpsbuild plugin"
-            dependsOn(project.tasks.withType(PublishToMavenRepository::class.java).matching {
-                ownArtifactNames.contains(it.publication.artifactId)
-            })
+            dependsOn(
+                project.tasks.withType(PublishToMavenRepository::class.java).matching {
+                    ownArtifactNames.contains(it.publication.artifactId)
+                },
+            )
         }
 
         if (settings.runConfigs.isNotEmpty()) {
             for (entry in settings.runConfigs) {
                 val taskConfig = entry.value
 
-                initializeBuildAndWorkDir(entry.key, taskConfig.configProperty)
+                var config: Provider<MPSRunnerConfig> = taskConfig.configProperty
+                config = config.map { initializeBuildAndWorkDir(entry.key, it) }
 
-                if (taskConfig.config.mpsHome == null) {
-                    taskConfig.updateConfig { config ->
-                        config.copy(mpsHome = mpsDirCurrent)
+                config = config.map { config ->
+                    if (config.mpsHome == null) {
+                        config.copy(mpsHome = mpsDirCurrent.get().asFile)
+                    } else {
+                        config
                     }
                 }
 
@@ -420,7 +425,7 @@ class MPSBuildPlugin : Plugin<Project> {
 
                     val resourceURI = implClass.getResourceName().let {
                         checkNotNull(implClass.getResource(it)) { "Resource not found: $it" }
-                    } .toURI()
+                    }.toURI()
                     val scriptClassesFolderOrJar = if (resourceURI.scheme == "jar") {
                         URI.create(resourceURI.schemeSpecificPart.substringBefore("!")).toPath()
                     } else {
@@ -431,18 +436,18 @@ class MPSBuildPlugin : Plugin<Project> {
 
                     taskConfig.includeConfiguration(getOrCreateInvokeLambdaDependencies())
 
-                    val serializedLambdaFile = taskConfig.config.buildDir().resolve(entry.key + "-impl.obj")
-                    taskConfig.updateConfig { config ->
+                    val serializedLambdaFile = config.map { it.buildDir().resolve(entry.key + "-impl.obj") }
+                    config = config.map { config ->
                         config.copy(
                             mainClassName = InvokeLambda::class.java.name,
                             mainMethodName = InvokeLambda::invoke.name,
-                            jvmArgs = config.jvmArgs + "-D${InvokeLambda.PROPERTY_KEY}=${serializedLambdaFile.absolutePath}"
+                            jvmArgs = config.jvmArgs + "-D${InvokeLambda.PROPERTY_KEY}=${serializedLambdaFile.get().absolutePath}",
                         )
                     }
                     project.tasks.register(entry.key + "_exportImpl") {
                         outputs.file(serializedLambdaFile)
                         doLast {
-                            ObjectOutputStream(serializedLambdaFile.outputStream()).use {
+                            ObjectOutputStream(serializedLambdaFile.get().outputStream()).use {
                                 it.writeObject(implementationLambda)
                             }
                         }
@@ -451,21 +456,23 @@ class MPSBuildPlugin : Plugin<Project> {
                     null
                 }
 
-                if (taskConfig.classPathFromConfigurations.isNotEmpty()) {
-                    val resolvedClasspath = taskConfig.classPathFromConfigurations
-                        .flatMap { it.resolvedConfiguration.files }
-                    taskConfig.updateConfig { config ->
+                config = config.map { config ->
+                    if (taskConfig.classPathFromConfigurations.isNotEmpty()) {
+                        val resolvedClasspath = taskConfig.classPathFromConfigurations
+                            .flatMap { it.resolvedConfiguration.files }
                         config.copy(
-                            classPathElements = config.classPathElements + resolvedClasspath
+                            classPathElements = config.classPathElements + resolvedClasspath,
                         )
+                    } else {
+                        config
                     }
                 }
 
                 createRunMPSTask(
                     taskName = entry.key,
-                    config = taskConfig.configProperty,
+                    config = config,
                     taskDependencies = listOfNotNull(exportImplTask, taskCopyDependencies).plus(taskConfig.taskDependencies).toTypedArray(),
-                    taskSubclass = RunMPSTask::class.java
+                    taskSubclass = RunMPSTask::class.java,
                 ).also {
                     it.configure {
                         result = taskConfig.result
@@ -476,15 +483,17 @@ class MPSBuildPlugin : Plugin<Project> {
         }
     }
 
-    private fun initializeBuildAndWorkDir(taskName: String, config: Property<MPSRunnerConfig>) {
-        if (config.get().buildDir == null) {
-            config.set(config.get().copy(
-                buildDir = project.layout.buildDirectory.asFile.get().resolve("runMPS").resolve(taskName)
-            ))
+    private fun initializeBuildAndWorkDir(taskName: String, config: MPSRunnerConfig): MPSRunnerConfig {
+        var config = config
+        if (config.buildDir == null) {
+            config = config.copy(
+                buildDir = project.layout.buildDirectory.asFile.get().resolve("runMPS").resolve(taskName),
+            )
         }
-        if (config.get().workDir == null) {
-            config.set(config.get().copy(workDir = config.get().buildDir))
+        if (config.workDir == null) {
+            config = config.copy(workDir = config.buildDir)
         }
+        return config
     }
 
     fun createRunMPSTask(
@@ -496,7 +505,7 @@ class MPSBuildPlugin : Plugin<Project> {
             taskName,
             project.objects.property<MPSRunnerConfig>().also { it.set(config) },
             taskDependencies,
-            RunMPSTask::class.java
+            RunMPSTask::class.java,
         )
     }
 
@@ -504,44 +513,52 @@ class MPSBuildPlugin : Plugin<Project> {
         taskName: String,
         config: MPSRunnerConfig,
         taskDependencies: Array<Any> = emptyArray(),
-        taskSubclass: Class<TaskT>
+        taskSubclass: Class<TaskT>,
     ): TaskProvider<TaskT> {
         return createRunMPSTask(
             taskName,
             project.objects.property<MPSRunnerConfig>().also { it.set(config) },
             taskDependencies,
-            taskSubclass
+            taskSubclass,
         )
     }
 
     fun <TaskT : RunMPSTask> createRunMPSTask(
         taskName: String,
-        config: Property<MPSRunnerConfig>,
+        config: Provider<MPSRunnerConfig>,
         taskDependencies: Array<Any> = emptyArray(),
-        taskSubclass: Class<TaskT>
+        taskSubclass: Class<TaskT>,
     ): TaskProvider<TaskT> {
-        initializeBuildAndWorkDir(taskName, config)
+        var config = config.map { initializeBuildAndWorkDir(taskName, it) }
 
-        if (config.get().moduleId == null) {
-            val moduleIdFile = config.get().buildDir().resolve("$taskName.moduleId.txt")
-            config.set(config.get().copy(
-                moduleId = try {
-                    UUID.fromString(moduleIdFile.readText())
-                } catch (ex: Exception) {
-                    moduleIdFile.parentFile.mkdirs()
-                    UUID.randomUUID().also { moduleIdFile.writeText(it.toString()) }
-                },
-            ))
+        config = config.map { config ->
+            if (config.moduleId == null) {
+                val moduleIdFile = config.buildDir().resolve("$taskName.moduleId.txt")
+                config.copy(
+                    moduleId = try {
+                        UUID.fromString(moduleIdFile.readText())
+                    } catch (ex: Exception) {
+                        moduleIdFile.parentFile.mkdirs()
+                        UUID.randomUUID().also { moduleIdFile.writeText(it.toString()) }
+                    },
+                )
+            } else {
+                config
+            }
         }
 
-        if (config.get().mpsHome == null) {
-            config.set(config.get().copy(mpsHome = mpsDirCurrent))
+        config = config.map { config ->
+            if (config.mpsHome == null) {
+                config.copy(mpsHome = mpsDirCurrent.get().asFile)
+            } else {
+                config
+            }
         }
 
         val generateTask = project.tasks.register(taskName + "_generate", GenerateMPSRunnerFilesTask::class.java) {
             val task = this
             dependsOn(*taskDependencies)
-            if (config.get().mpsHome == mpsDirCurrent) task.dependsOn(taskCopyDependencies)
+            task.dependsOn(taskCopyDependencies)
             task.config.set(config)
 
             outputs.file(config.map { MPSRunner(it).getAntScriptFile() })
@@ -555,13 +572,13 @@ class MPSBuildPlugin : Plugin<Project> {
 
             task.dependsOn(generateTask)
 
-            config.get().buildDir().let { inputs.dir(it) }
+            inputs.dir(config.map { it.buildDir() })
             config.get().additionalModuleDirs.forEach { inputs.dir(it) }
             config.get().additionalModuleDependencyDirs.forEach { inputs.dir(it) }
             config.get().jarFolders.forEach { inputs.dir(it) }
             config.get().classPathElements.forEach { if (it.isFile || it.extension.lowercase() == "jar") inputs.file(it) else inputs.dir(it) }
 
-            task.workingDir = config.get().workDir()
+            task.workingDir(config.map { it.workDir() })
             task.mainClass.set("org.apache.tools.ant.launch.Launcher")
             task.classpath(getOrCreateAntDependencies())
             task.args("-buildfile", MPSRunner(config.get()).getAntScriptFile())
@@ -640,7 +657,7 @@ class MPSBuildPlugin : Plugin<Project> {
     private fun generateVersionNumber(mpsVersion: String?): String {
         val timestamp = SimpleDateFormat("yyyyMMddHHmm").format(Date())
         val version = if (mpsVersion == null) timestamp else "$mpsVersion-$timestamp"
-        println("##teamcity[buildNumber '${version}']")
+        println("##teamcity[buildNumber '$version']")
         return version
     }
 
@@ -649,7 +666,7 @@ class MPSBuildPlugin : Plugin<Project> {
         StubsSolutionGenerator(
             solutionIdAndName = ModuleIdAndName(ModuleId("~$solutionName"), solutionName),
             jarPaths = dependency.moduleArtifacts.map { it.file }.filter { it.extension == "jar" }.map { it.absolutePath }.distinct(),
-            moduleDependencies = dependency.children.map { getStubSolutionName(it) }.map { ModuleIdAndName(ModuleId("~$solutionName"), solutionName) }
+            moduleDependencies = dependency.children.map { getStubSolutionName(it) }.map { ModuleIdAndName(ModuleId("~$solutionName"), solutionName) },
         ).generateFile(stubsDir.resolve(solutionName).resolve("$solutionName.msd"))
     }
 
@@ -682,10 +699,12 @@ class MPSBuildPlugin : Plugin<Project> {
         return generator
     }
 
-    private fun createBuildScriptGenerator(settings: MPSBuildSettings,
-                                           project: Project,
-                                           buildDir: File,
-                                           dependencyFiles: Set<File>): BuildScriptGenerator {
+    private fun createBuildScriptGenerator(
+        settings: MPSBuildSettings,
+        project: Project,
+        buildDir: File,
+        dependencyFiles: Set<File>,
+    ): BuildScriptGenerator {
         val modulesMiner = ModulesMiner()
         for (modulePath in settings.resolveModulePaths(project.projectDir.toPath())) {
             modulesMiner.searchInFolder(modulePath.toFile())
@@ -711,13 +730,15 @@ class MPSBuildPlugin : Plugin<Project> {
             modulesToGenerate = modulesToGenerate,
             ignoredModules = emptySet(),
             initialMacros = settings.getMacros(project.projectDir.toPath()),
-            buildDir = buildDir
+            buildDir = buildDir,
         )
         generator.generatorHeapSize = settings.generatorHeapSize
         generator.ideaPlugins += settings.getPublications().flatMap { it.ideaPlugins }.map { pluginSettings ->
             val moduleName = pluginSettings.getImplementationModuleName()
-            val module = (modulesMiner.getModules().getModules().values.find { it.name == moduleName }
-                ?: throw RuntimeException("module $moduleName not found"))
+            val module = (
+                modulesMiner.getModules().getModules().values.find { it.name == moduleName }
+                    ?: throw RuntimeException("module $moduleName not found")
+                )
             BuildScriptGenerator.IdeaPlugin(module, "" + project.version, pluginSettings.pluginXml)
         }
         return generator
@@ -771,7 +792,7 @@ class MPSBuildPlugin : Plugin<Project> {
                     .resolve("modules")
                     .resolve(dependency.moduleGroup)
                     .resolve(dependency.moduleName)
-                    //.resolve(file.name)
+                // .resolve(file.name)
                 folder2owningDependency[targetFile.absoluteFile.toPath().normalize()] = dependency
                 copyAndUnzip(file, targetFile)
             }

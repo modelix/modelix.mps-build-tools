@@ -19,4 +19,3 @@
     <module reference="d83a58b6-cc6e-4bef-9eac-8d0d264ca336(test.org.modelix.generatortestproject.S2)" version="0" />
   </dependencyVersions>
 </solution>
-

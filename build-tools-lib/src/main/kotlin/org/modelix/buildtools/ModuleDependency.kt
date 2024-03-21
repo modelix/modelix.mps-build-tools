@@ -14,13 +14,13 @@
 package org.modelix.buildtools
 
 data class ModuleDependency(val id: ModuleId, val moduleName: String?, val type: DependencyType, val ignoreIfMissing: Boolean) {
-    constructor(idAndName: ModuleIdAndName, type: DependencyType, ignoreIfMissing: Boolean): this(idAndName.id, idAndName.name, type, ignoreIfMissing)
-    constructor(id: ModuleId, type: DependencyType, ignoreIfMissing: Boolean): this(id, null, type, ignoreIfMissing)
+    constructor(idAndName: ModuleIdAndName, type: DependencyType, ignoreIfMissing: Boolean) : this(idAndName.id, idAndName.name, type, ignoreIfMissing)
+    constructor(id: ModuleId, type: DependencyType, ignoreIfMissing: Boolean) : this(id, null, type, ignoreIfMissing)
 }
 
 enum class DependencyType {
     Classpath,
     Model,
     Generator,
-    UseLanguageOrDevkit
+    UseLanguageOrDevkit,
 }

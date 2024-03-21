@@ -15,7 +15,7 @@ package org.modelix.buildtools
 
 open class GeneratorDependencyGraph(
     moduleResolver: ModuleResolver,
-    val additionalGenerationDependencies: Map<ModuleId, Set<ModuleId>>
+    val additionalGenerationDependencies: Map<ModuleId, Set<ModuleId>>,
 ) : ModuleDependencyGraph(moduleResolver) {
     override fun getDependencies(element: FoundModule): Iterable<FoundModule> {
         val dependencies = element.getGenerationDependencies(moduleResolver)

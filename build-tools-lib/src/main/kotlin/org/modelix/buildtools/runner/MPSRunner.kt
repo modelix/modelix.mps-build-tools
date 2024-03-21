@@ -5,10 +5,11 @@ import org.modelix.buildtools.ModulesMiner
 import org.modelix.buildtools.buildXmlString
 import org.modelix.buildtools.newChild
 import java.io.File
-import java.util.*
+import java.util.Properties
+import java.util.UUID
 
 class MPSRunner(
-    originalConfig: MPSRunnerConfig
+    originalConfig: MPSRunnerConfig,
 ) {
     companion object {
         // https://github.com/mbeddr/mps-build-backends/blob/b62bc815cf79d2c4af16ae38c2b0d98701c8f1db/launcher/src/main/java/de/itemis/mps/gradle/launcher/MpsBackendBuilder.java#L115
@@ -75,15 +76,17 @@ class MPSRunner(
             },
             mpsHome = config.mpsHome ?: mpsHomeFromPropertiesOrEnv(),
             moduleId = config.moduleId ?: UUID.randomUUID(),
-            jvmArgs = config.jvmArgs + jvmOpens.map { "--add-opens=$it=ALL-UNNAMED" }
+            jvmArgs = config.jvmArgs + jvmOpens.map { "--add-opens=$it=ALL-UNNAMED" },
         )
 
         config.additionalModuleDependencyDirs.forEach { dir ->
             val miner = ModulesMiner()
             miner.searchInFolder(dir)
             miner.getModules().getModules().values.forEach {
-                config = config.copy(additionalModuleDependencies = config.additionalModuleDependencies +
-                        it.idAndName.toString())
+                config = config.copy(
+                    additionalModuleDependencies = config.additionalModuleDependencies +
+                        it.idAndName.toString(),
+                )
             }
             config = config.copy(additionalModuleDirs = config.additionalModuleDirs + dir)
         }

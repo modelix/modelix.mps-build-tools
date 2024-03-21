@@ -26,8 +26,8 @@ class LanguageDescriptor(xml: Element) : ModuleDescriptor(xml) {
     init {
         // see LanguageDescriptorPersistence in MPS
         languageVersion = xml.getAttribute("languageVersion").toIntOrNull()
-                ?: xml.getAttribute("version").toIntOrNull()
-                ?: 0
+            ?: xml.getAttribute("version").toIntOrNull()
+            ?: 0
 
         extendedLanguages = xml.childElements("extendedLanguages")
             .flatMap { it.childElements("extendedLanguage") }
@@ -41,6 +41,5 @@ class LanguageDescriptor(xml: Element) : ModuleDescriptor(xml) {
 
         generators = xml.childElements("generators").flatMap { it.childElements("generator") }
             .map { GeneratorDescriptor(it, this) }
-
     }
 }

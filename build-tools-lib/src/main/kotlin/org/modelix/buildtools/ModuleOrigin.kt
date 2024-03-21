@@ -21,5 +21,4 @@ class ModuleOrigin(val localPath: Path, val workspaceRelativePath: Path = localP
     fun localModulePath(file: File): ModulePath {
         return ModulePath(this, localPath.relativize(file.toPath()))
     }
-
 }

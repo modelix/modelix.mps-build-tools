@@ -134,7 +134,6 @@ abstract class DependencyGraph<ElementT, KeyT> {
         }
     }
 
-
     inner class DependencyNode {
         val modules: MutableSet<ElementT> = HashSet()
         private val dependencies: MutableSet<DependencyNode> = HashSet()
@@ -180,7 +179,7 @@ abstract class DependencyGraph<ElementT, KeyT> {
         }
     }
 
-    private inner class CycleFinder: CycleDetection<DependencyNode, DependencyNode>() {
+    private inner class CycleFinder : CycleDetection<DependencyNode, DependencyNode>() {
         override fun getOutgoingEdges(element: DependencyNode): Iterable<DependencyNode> {
             val dependencies = element.getDependencies()
             for (dependency in dependencies) {

@@ -13,16 +13,9 @@
  */
 package org.modelix.buildtools
 
-import java.io.ByteArrayInputStream
 import java.io.File
-import java.io.FileInputStream
-import java.io.StringReader
 import java.net.URI
 import java.nio.file.FileSystems
-import java.nio.file.Path
-import java.util.regex.Matcher
-import java.util.regex.Pattern
-import java.util.zip.ZipInputStream
 import kotlin.io.path.readLines
 
 /**
@@ -41,7 +34,7 @@ class PluginModuleOwner(path: ModulePath, val pluginId: String, val name: String
                 .asSequence()
                 .filter { it.tagName.endsWith("LanguageLibrary") }
                 .map { it.getAttribute("dir") }
-                .map { it.trimStart('/', '\\')  }
+                .map { it.trimStart('/', '\\') }
                 .map { pluginFolder.resolve(it).normalize() }
                 .minus(pluginFolder)
                 .distinct()

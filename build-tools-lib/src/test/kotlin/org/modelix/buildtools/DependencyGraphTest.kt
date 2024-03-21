@@ -20,77 +20,89 @@ class DependencyGraphTest {
 
     @Test
     fun cyclesTest1() {
-        runTest(listOf(
-            Element("a1", "a2"),
-            Element("a2", "a3"),
-            Element("a3", "a1"),
+        runTest(
+            listOf(
+                Element("a1", "a2"),
+                Element("a2", "a3"),
+                Element("a3", "a1"),
 
-            Element("b1", "b2"),
-            Element("b2", "b3"),
-            Element("b3", "b1"),
-        ), setOf(
-            setOf("a1", "a2", "a3"),
-            setOf("b1", "b2", "b3")
-        ))
+                Element("b1", "b2"),
+                Element("b2", "b3"),
+                Element("b3", "b1"),
+            ),
+            setOf(
+                setOf("a1", "a2", "a3"),
+                setOf("b1", "b2", "b3"),
+            ),
+        )
     }
 
     @Test
     fun treeOfCycles() {
-        runTest(listOf(
-            Element("a1", "a2"),
-            Element("a2", "a3"),
-            Element("a3", "a1", "b1"),
+        runTest(
+            listOf(
+                Element("a1", "a2"),
+                Element("a2", "a3"),
+                Element("a3", "a1", "b1"),
 
-            Element("b1", "b2"),
-            Element("b2", "b3"),
-            Element("b3", "b1"),
+                Element("b1", "b2"),
+                Element("b2", "b3"),
+                Element("b3", "b1"),
 
-            Element("c1", "c2"),
-            Element("c2", "c3"),
-            Element("c3", "c1", "b2"),
-        ), setOf(
-            setOf("a1", "a2", "a3"),
-            setOf("c1", "c2", "c3"),
-            setOf("b1", "b2", "b3")
-        ))
+                Element("c1", "c2"),
+                Element("c2", "c3"),
+                Element("c3", "c1", "b2"),
+            ),
+            setOf(
+                setOf("a1", "a2", "a3"),
+                setOf("c1", "c2", "c3"),
+                setOf("b1", "b2", "b3"),
+            ),
+        )
     }
 
     @Test
     fun cycleOfCycles() {
-        runTest(listOf(
-            Element("a1", "a2"),
-            Element("a2", "a3"),
-            Element("a3", "a1", "b1"),
+        runTest(
+            listOf(
+                Element("a1", "a2"),
+                Element("a2", "a3"),
+                Element("a3", "a1", "b1"),
 
-            Element("b1", "b2"),
-            Element("b2", "b3"),
-            Element("b3", "b1", "c1"),
+                Element("b1", "b2"),
+                Element("b2", "b3"),
+                Element("b3", "b1", "c1"),
 
-            Element("c1", "c2"),
-            Element("c2", "c3"),
-            Element("c3", "c1", "a1"),
-        ), setOf(
-            setOf("a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3")
-        ))
+                Element("c1", "c2"),
+                Element("c2", "c3"),
+                Element("c3", "c1", "a1"),
+            ),
+            setOf(
+                setOf("a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3"),
+            ),
+        )
     }
 
     @Test
     fun cyclesTest4() {
-        runTest(listOf(
-            Element("a1", "a2"),
-            Element("a2", "a3"),
-            Element("a3", "a1", "b"),
+        runTest(
+            listOf(
+                Element("a1", "a2"),
+                Element("a2", "a3"),
+                Element("a3", "a1", "b"),
 
-            Element("b", "c1"),
+                Element("b", "c1"),
 
-            Element("c1", "c2"),
-            Element("c2", "c3"),
-            Element("c3", "c1"),
-        ), setOf(
-            setOf("a1", "a2", "a3"),
-            setOf("c1", "c2", "c3"),
-            setOf("b")
-        ))
+                Element("c1", "c2"),
+                Element("c2", "c3"),
+                Element("c3", "c1"),
+            ),
+            setOf(
+                setOf("a1", "a2", "a3"),
+                setOf("c1", "c2", "c3"),
+                setOf("b"),
+            ),
+        )
     }
 
     private fun runTest(elements: List<Element>, expected: Set<Set<String>>) {

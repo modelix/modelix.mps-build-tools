@@ -13,4 +13,3 @@ pluginManagement {
     }
 }
 rootProject.name = "build-tools-gradle-test"
-

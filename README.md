@@ -24,4 +24,3 @@ Copyright © 2021-present by the modelix open source project and the individual 
 
 Use of this software is granted under the terms of the Apache License Version 2.0.
 See the [LICENSE](LICENSE) to find the full license text.
-

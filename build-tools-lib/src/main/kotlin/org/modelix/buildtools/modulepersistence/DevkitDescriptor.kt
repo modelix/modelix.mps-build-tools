@@ -19,7 +19,7 @@ import org.modelix.buildtools.findTag
 import org.modelix.buildtools.getAttributeOrNull
 import org.w3c.dom.Element
 
-class DevkitDescriptor(xml: Element): ModuleDescriptor(xml) {
+class DevkitDescriptor(xml: Element) : ModuleDescriptor(xml) {
     val exportedLanguages: List<ModuleIdAndName>
     val exportedSolutions: List<ModuleIdAndName>
     val extendedDevkits: List<ModuleIdAndName>

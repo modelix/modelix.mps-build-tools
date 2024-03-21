@@ -13,12 +13,18 @@
  */
 package org.modelix.buildtools
 
-import org.modelix.buildtools.modulepersistence.*
+import org.modelix.buildtools.modulepersistence.DeploymentDescriptor
+import org.modelix.buildtools.modulepersistence.DevkitDescriptor
+import org.modelix.buildtools.modulepersistence.GeneratorDescriptor
+import org.modelix.buildtools.modulepersistence.LanguageDescriptor
+import org.modelix.buildtools.modulepersistence.ModuleDescriptor
 import java.io.File
 
-class FoundModule(val moduleId: ModuleId,
-                  val owner: ModuleOwner,
-                  var moduleType: ModuleType) {
+class FoundModule(
+    val moduleId: ModuleId,
+    val owner: ModuleOwner,
+    var moduleType: ModuleType,
+) {
 //    private val dependencies: MutableSet<ModuleDependency> = LinkedHashSet()
     var moduleDescriptor: ModuleDescriptor? = null
     var deploymentDescriptor: DeploymentDescriptor? = null
@@ -81,8 +87,9 @@ class FoundModule(val moduleId: ModuleId,
         val runtimes = allUsedLanguages
             .map { it to it.moduleDescriptor }
             .filter { it.second is LanguageDescriptor }
-            .flatMap { lang -> (lang.second as LanguageDescriptor).runtime
-                                    .mapNotNull { rt -> resolver.resolveModule(rt.idAndName, lang.first) }
+            .flatMap { lang ->
+                (lang.second as LanguageDescriptor).runtime
+                    .mapNotNull { rt -> resolver.resolveModule(rt.idAndName, lang.first) }
             }
         result += runtimes
         val moduleDescriptor = moduleDescriptor

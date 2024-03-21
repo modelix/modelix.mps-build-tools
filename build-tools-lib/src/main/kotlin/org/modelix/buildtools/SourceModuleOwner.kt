@@ -13,11 +13,7 @@
  */
 package org.modelix.buildtools
 
-import java.io.File
-
 /**
  * A module that needs to be built.
  */
-class SourceModuleOwner(path: ModulePath, val virtualFolder: String? = null) : ModuleOwner(path) {
-
-}
+class SourceModuleOwner(path: ModulePath, val virtualFolder: String? = null) : ModuleOwner(path)

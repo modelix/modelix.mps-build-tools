@@ -5,7 +5,7 @@ import java.io.File
 class StubsSolutionGenerator(
     val solutionIdAndName: ModuleIdAndName,
     val jarPaths: List<String>,
-    val moduleDependencies: List<ModuleIdAndName>
+    val moduleDependencies: List<ModuleIdAndName>,
 ) {
     fun generateFile(solutionFile: File) {
         solutionFile.parentFile.mkdirs()
@@ -36,7 +36,6 @@ class StubsSolutionGenerator(
                             }
                         }
                     }
-
                 }
                 newChild("dependencies") {
                     newChild("dependency", "6354ebe7-c22a-4a0f-ac54-50b52ab9b065(JDK)") {

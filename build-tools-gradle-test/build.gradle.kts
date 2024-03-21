@@ -16,7 +16,7 @@ plugins {
     base
     `maven-publish`
     id("org.modelix.mps.build-tools")
-    kotlin("jvm") version "1.8.10"
+    kotlin("jvm") version "1.9.23"
 }
 
 group = "org.modelix"

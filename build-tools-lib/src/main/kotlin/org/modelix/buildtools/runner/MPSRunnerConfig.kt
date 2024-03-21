@@ -18,7 +18,7 @@ data class MPSRunnerConfig(
     val workDir: File? = null,
     val buildDir: File? = null,
     val jvmArgs: List<String> = emptyList(),
-    val moduleId: UUID? = null
+    val moduleId: UUID? = null,
 ) : Serializable {
     fun buildDir() = buildDir ?: workDir()
     fun workDir() = workDir ?: File(".")
