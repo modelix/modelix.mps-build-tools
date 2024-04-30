@@ -37,6 +37,7 @@ abstract class ModuleDescriptor(val xml: Element) {
     private val facets: List<Element>
     val javaLibPaths: List<String>
     val ideaPluginId: String?
+    val loadsClassesFromIdeaPlugin: Boolean
 
     init {
         // see ModuleDescriptorPersistence in MPS
@@ -62,11 +63,21 @@ abstract class ModuleDescriptor(val xml: Element) {
             root.childElements("sourceRoot").map { contentPath + "/" + it.getAttribute("location") }
         }
         facets = xml.childElements("facets").flatMap { it.childElements("facet") }
-        javaLibPaths = xml.childElements("stubModelEntries")
+        val ideaFacet = facets.find { it.getAttribute("type") == "ideaPlugin" }
+        val javaFacet = facets.firstOrNull { it.getAttribute("type") == "java" }
+        ideaPluginId = ideaFacet?.getAttributeOrNull("pluginId")
+        val classLoadingType = javaFacet?.getAttributeOrNull("classes")
+        loadsClassesFromIdeaPlugin = classLoadingType == "provided" || ideaPluginId != null
+
+        // The name 'stubModelEntries' is confusing. These are actually the jars listed as 'Libraries' on the java tab.
+        // In later MPS versions this was changed.
+        val jarsFromLegacyPersistence = xml.childElements("stubModelEntries")
             .flatMap { it.childElements("stubModelEntry") }
             .map { it.getAttribute("path") }
-        ideaPluginId = xml.childElements("facets").flatMap { it.childElements("facet") }
-            .find { it.getAttribute("type") == "ideaPlugin" }?.getAttributeOrNull("pluginId")
+        val jarsFromJavaFacet = (javaFacet?.childElements("library") ?: emptyList())
+            .mapNotNull { it.getAttributeOrNull("location") }
+
+        javaLibPaths = jarsFromJavaFacet + jarsFromLegacyPersistence
     }
 
     fun resolveJavaLibs(macros: Macros): List<Path> {

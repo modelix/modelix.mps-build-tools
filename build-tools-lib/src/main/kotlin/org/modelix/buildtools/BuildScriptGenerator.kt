@@ -57,6 +57,8 @@ class BuildScriptGenerator(
 
     fun getMpsHome() = modulesMiner.getModules().mpsHome ?: throw RuntimeException("mps.home not found")
 
+    fun getKotlincHome() = getMpsHome().resolve("plugins/mps-kotlin/kotlinc")
+
     fun getMacros(): Macros {
         val mpsHome = getMpsHome()
         return initialMacros.with(
@@ -96,7 +98,7 @@ class BuildScriptGenerator(
 
     fun generateAnt(): Document {
         val resolver = ModuleResolver(modulesMiner.getModules(), ignoredModules)
-        val (plan, dependencyGraph) = generatePlan(getModulesToGenerate(), resolver)
+        val (plan, generatorDependencyGraph) = generatePlan(getModulesToGenerate(), resolver)
         val mpsHome = getMpsHome()
         val mpsVersion = getMpsVersion()
         val macros = getMacros()
@@ -226,6 +228,14 @@ class BuildScriptGenerator(
                 }
             }
 
+            // kotlin compiler support
+            if (getKotlincHome().exists()) {
+                newChild("typedef") {
+                    setAttribute("resource", "org/jetbrains/kotlin/ant/antlib.xml")
+                    setAttribute("classpath", getKotlincHome().resolve("lib/kotlin-ant.jar").absolutePath)
+                }
+            }
+
             // target: compile.___.__.___
             val sourceModules = plan.chunks.flatMap { it.modules }.filter { it.owner is SourceModuleOwner }
             val generatorModules = sourceModules.flatMap { it.owner.modules.values - it }
@@ -251,7 +261,17 @@ class BuildScriptGenerator(
                     }
                 }
             }
+
             for (cycle in compileCycles) {
+                val usesKotlin = cycle.modules.singleOrNull()
+                    ?.let { generatorDependencyGraph.getNode(it.moduleId) }
+                    ?.getTransitiveDependencies()
+                    ?.flatMap { it.modules }
+                    ?.map { it.owner.getRootOwner() }
+                    ?.filterIsInstance<PluginModuleOwner>()
+                    ?.any { it.pluginId == "jetbrains.mps.kotlin" }
+                    ?: false
+
                 val cycleSourceModules = cycle.modules.filter { it.owner is SourceModuleOwner }
                 val isCycle = cycle.modules.size > 1
                 if (isCycle) {
@@ -263,6 +283,7 @@ class BuildScriptGenerator(
                         targetDependencies = cycle.getDependencies().mapNotNull { getCompileTargetName(it) },
                         outputDir = getCompileOutputDir(cycle)!!,
                         mpsHome = mpsHome,
+                        withKotlin = usesKotlin,
                     )
                 }
 
@@ -280,6 +301,7 @@ class BuildScriptGenerator(
                         targetDependencies = targetDependencies,
                         outputDir = getCompileOutputDir(module),
                         mpsHome = mpsHome,
+                        withKotlin = usesKotlin,
                     )
                 }
             }
@@ -587,6 +609,7 @@ class BuildScriptGenerator(
         targetDependencies: List<String>,
         outputDir: File,
         mpsHome: File,
+        withKotlin: Boolean,
     ) {
         newChild("target") {
             setAttribute("name", targetName)
@@ -614,6 +637,14 @@ class BuildScriptGenerator(
                 setAttribute("debug", "true")
                 setAttribute("source", "11")
                 setAttribute("target", "11")
+                if (withKotlin) {
+                    newChild("withKotlin") {
+                        setAttribute("moduleName", modules.single().name)
+                        newChild("compilerarg") {
+                            setAttribute("value", "-jvm-target=11")
+                        }
+                    }
+                }
                 newChild("compilerarg") {
                     setAttribute("value", "-Xlint:none")
                 }
@@ -803,7 +834,25 @@ class BuildScriptGenerator(
                     .walk().filter { it.extension == "jar" }.toList()
             }
             else -> throw RuntimeException("Unknown owner: $owner")
-        } + module.getOwnJars(macros)
+        } + module.getOwnJars(macros) + getJarsFromPlugin(module)
+    }
+
+    /**
+     * To make classes from an IDEA plugin available to MPS modules a solution can be configured to act as a
+     * classloading proxy that forwards classloading request to an IDEA plugin.
+     * If that's the case, then this method returns the jars of that plugin.
+     */
+    private fun getJarsFromPlugin(module: FoundModule): List<File> {
+        val descriptor = module.moduleDescriptor ?: return emptyList()
+        if (!descriptor.loadsClassesFromIdeaPlugin) return emptyList()
+        val plugin = if (descriptor.ideaPluginId == null) {
+            module.owner.getRootOwner() as? PluginModuleOwner
+        } else {
+            modulesMiner.getModules().getPlugin(descriptor.ideaPluginId)
+        } ?: return emptyList()
+        val libFolder = plugin.path.getLocalAbsolutePath().resolve("lib").toFile()
+        if (!libFolder.exists()) return emptyList()
+        return libFolder.walk().filter { it.extension.lowercase() == "jar" }.toList()
     }
 
     private fun generatePlan(modulesToGenerate: List<ModuleId>, resolver: ModuleResolver): Pair<GenerationPlan, GeneratorDependencyGraph> {
