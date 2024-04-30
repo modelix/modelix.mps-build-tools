@@ -834,7 +834,25 @@ class BuildScriptGenerator(
                     .walk().filter { it.extension == "jar" }.toList()
             }
             else -> throw RuntimeException("Unknown owner: $owner")
-        } + module.getOwnJars(macros)
+        } + module.getOwnJars(macros) + getJarsFromPlugin(module)
+    }
+
+    /**
+     * To make classes from an IDEA plugin available to MPS modules a solution can be configured to act as a
+     * classloading proxy that forwards classloading request to an IDEA plugin.
+     * If that's the case, then this method returns the jars of that plugin.
+     */
+    private fun getJarsFromPlugin(module: FoundModule): List<File> {
+        val descriptor = module.moduleDescriptor ?: return emptyList()
+        if (!descriptor.loadsClassesFromIdeaPlugin) return emptyList()
+        val plugin = if (descriptor.ideaPluginId == null) {
+            module.owner.getRootOwner() as? PluginModuleOwner
+        } else {
+            modulesMiner.getModules().getPlugin(descriptor.ideaPluginId)
+        } ?: return emptyList()
+        val libFolder = plugin.path.getLocalAbsolutePath().resolve("lib").toFile()
+        if (!libFolder.exists()) return emptyList()
+        return libFolder.walk().filter { it.extension.lowercase() == "jar" }.toList()
     }
 
     private fun generatePlan(modulesToGenerate: List<ModuleId>, resolver: ModuleResolver): Pair<GenerationPlan, GeneratorDependencyGraph> {
