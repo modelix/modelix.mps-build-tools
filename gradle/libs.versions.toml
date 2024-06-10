@@ -1,7 +1,7 @@
 [versions]
 
 kotlin = "1.9.23"
-kotlinCoroutines="1.8.0"
+kotlinCoroutines="1.8.1"
 junitJupiter = "5.10.2"
 
 [plugins]
