@@ -27,7 +27,10 @@ import org.gradle.kotlin.dsl.provideDelegate
 import org.gradle.kotlin.dsl.setValue
 import org.modelix.buildtools.Macros
 import org.modelix.buildtools.readXmlFile
+import org.modelix.buildtools.runner.BundledPluginPath
+import org.modelix.buildtools.runner.ExternalPluginPath
 import org.modelix.buildtools.runner.MPSRunnerConfig
+import org.modelix.buildtools.runner.PluginConfig
 import org.w3c.dom.Document
 import java.io.File
 import java.net.URL
@@ -279,5 +282,7 @@ open class MPSBuildSettings(val project: Project) {
         fun jarLibrary(file: File) = updateConfig { it.copy(classPathElements = it.classPathElements + file) }
         fun jarLibraries(dir: File) = updateConfig { it.copy(jarFolders = it.classPathElements + dir) }
         fun jvmArg(arg: String) = updateConfig { it.copy(jvmArgs = it.jvmArgs + arg) }
+        fun bundledPlugin(id: String, dir: File) = updateConfig { it.copy(plugins = it.plugins + PluginConfig(id, BundledPluginPath(dir))) }
+        fun externalPlugin(id: String, dir: File) = updateConfig { it.copy(plugins = it.plugins + PluginConfig(id, ExternalPluginPath(dir))) }
     }
 }
