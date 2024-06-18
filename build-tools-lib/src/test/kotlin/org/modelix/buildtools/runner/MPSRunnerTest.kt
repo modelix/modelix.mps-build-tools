@@ -43,4 +43,15 @@ class MPSRunnerTest {
         assertThat(antScriptText)
             .contains("""<plugin id="aPluginId" path="/aPluginFolder"/>""")
     }
+
+    @Test
+    fun `generate config with enabled autoPluginDiscovery`() {
+        val config = MPSRunnerConfig(buildDir = buildDir, mpsHome = mpsHome, autoPluginDiscovery = true)
+        val runner = MPSRunner(config)
+
+        val antScriptText = runner.generateAntScriptText(mpsVersion)
+
+        assertThat(antScriptText)
+            .contains("""<runMPS autoPluginDiscovery="true" solution="null(runMPS_null.solution)" startClass="Main" startMethod="main">""")
+    }
 }

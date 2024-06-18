@@ -20,6 +20,13 @@ data class MPSRunnerConfig(
     val jvmArgs: List<String> = emptyList(),
     val moduleId: UUID? = null,
     val plugins: List<PluginConfig> = emptyList(),
+    /**
+     * Enable or disable automatically loading available plugins.
+     * If a value is specified, it will be set as the
+     * "autoPluginDiscovery" property [jetbrains.mps.build.ant.MpsLoadTask.setAutoPluginDiscovery]
+     * on the "runMPS" task [jetbrains.mps.build.ant.generation.MpsRunnerTask].
+     */
+    val autoPluginDiscovery: Boolean? = null,
 ) : Serializable {
     fun buildDir() = buildDir ?: workDir()
     fun workDir() = workDir ?: File(".")

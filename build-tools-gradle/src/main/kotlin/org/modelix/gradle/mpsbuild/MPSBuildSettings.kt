@@ -284,5 +284,6 @@ open class MPSBuildSettings(val project: Project) {
         fun jvmArg(arg: String) = updateConfig { it.copy(jvmArgs = it.jvmArgs + arg) }
         fun bundledPlugin(id: String, dir: File) = updateConfig { it.copy(plugins = it.plugins + PluginConfig(id, BundledPluginPath(dir))) }
         fun externalPlugin(id: String, dir: File) = updateConfig { it.copy(plugins = it.plugins + PluginConfig(id, ExternalPluginPath(dir))) }
+        fun autoPluginDiscovery(autoPluginDiscovery: Boolean?) = updateConfig { it.copy(autoPluginDiscovery = autoPluginDiscovery) }
     }
 }

@@ -237,6 +237,9 @@ class MPSRunner(
                         setAttribute("solution", "${config.moduleId}(${getSolutionName()})")
                         setAttribute("startClass", config.mainClassName)
                         setAttribute("startMethod", config.mainMethodName)
+                        if (config.autoPluginDiscovery != null) {
+                            setAttribute("autoPluginDiscovery", config.autoPluginDiscovery.toString())
+                        }
 
                         for (plugin in config.plugins) {
                             newChild("plugin") {
