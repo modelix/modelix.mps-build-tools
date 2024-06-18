@@ -10,6 +10,7 @@ dependencies {
     implementation(libs.apache.commons.text)
     implementation(libs.apache.commons.io)
     testImplementation(libs.junit.jupiter.api)
+    testImplementation(libs.assertj)
     testRuntimeOnly(libs.junit.jupiter.engine)
 }
 

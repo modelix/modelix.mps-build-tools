@@ -12,6 +12,8 @@ class MPSRunner(
     originalConfig: MPSRunnerConfig,
 ) {
     companion object {
+        internal const val PROPERTY_KEY_ARTIFACTS_MPS = "artifacts.mps"
+
         // https://github.com/mbeddr/mps-build-backends/blob/b62bc815cf79d2c4af16ae38c2b0d98701c8f1db/launcher/src/main/java/de/itemis/mps/gradle/launcher/MpsBackendBuilder.java#L115
         private val jvmOpens = listOf(
             "java.base/java.io",
@@ -95,7 +97,7 @@ class MPSRunner(
     fun generateAll() {
         processConfig()
         generateSolution()
-        generateAntScript()
+        generateAntScriptFile()
     }
 
     private fun getMpsBuildPropertiesFile() = config.mpsHome!!.resolve("build.properties")
@@ -172,11 +174,9 @@ class MPSRunner(
         getSolutionFile().writeText(xml)
     }
 
-    private fun generateAntScript() {
-        val mpsVersion = getMpsVersion()
-        val antScriptFile = getAntScriptFile()
+    fun generateAntScriptText(mpsVersion: String): String {
         val antLibs = BuildScriptGenerator.getMpsAntLibraries(mpsVersion)
-        val xml = buildXmlString {
+        return buildXmlString {
             newChild("project") {
                 setAttribute("name", getFileNamePrefix())
                 setAttribute("default", RUN_MPS_TASK_NAME)
@@ -198,7 +198,7 @@ class MPSRunner(
                     setAttribute("location", config.mpsHome!!.absolutePath)
                 }
                 newChild("property") {
-                    setAttribute("name", "artifacts.mps")
+                    setAttribute("name", PROPERTY_KEY_ARTIFACTS_MPS)
                     setAttribute("location", "\${mps.home}")
                 }
                 newChild("property") {
@@ -237,6 +237,22 @@ class MPSRunner(
                         setAttribute("solution", "${config.moduleId}(${getSolutionName()})")
                         setAttribute("startClass", config.mainClassName)
                         setAttribute("startMethod", config.mainMethodName)
+                        if (config.autoPluginDiscovery != null) {
+                            setAttribute("autoPluginDiscovery", config.autoPluginDiscovery.toString())
+                        }
+
+                        for (plugin in config.plugins) {
+                            newChild("plugin") {
+                                val pathXmlValue = when (plugin.path) {
+                                    // We can use the forward slash as path separator for Windows,
+                                    // because MPS also use it when generating for Windows.
+                                    is BundledPluginPath -> "\${$PROPERTY_KEY_ARTIFACTS_MPS}/${plugin.path.dir}"
+                                    is ExternalPluginPath -> plugin.path.dir.absolutePath
+                                }
+                                setAttribute("path", pathXmlValue)
+                                setAttribute("id", plugin.id)
+                            }
+                        }
 
                         newChild("library") { setAttribute("file", getMpsLanguagesDir().absolutePath) }
                         newChild("library") { setAttribute("file", getSolutionDir().absolutePath) }
@@ -256,8 +272,13 @@ class MPSRunner(
                 }
             }
         }
+    }
 
+    private fun generateAntScriptFile() {
+        val mpsVersion = getMpsVersion()
+        val antScriptText = generateAntScriptText(mpsVersion)
+        val antScriptFile = getAntScriptFile()
         antScriptFile.parentFile.mkdirs()
-        antScriptFile.writeText(xml)
+        antScriptFile.writeText(antScriptText)
     }
 }
