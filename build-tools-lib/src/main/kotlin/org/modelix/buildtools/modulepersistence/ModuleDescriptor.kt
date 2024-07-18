@@ -77,7 +77,7 @@ abstract class ModuleDescriptor(val xml: Element) {
         val jarsFromJavaFacet = (javaFacet?.childElements("library") ?: emptyList())
             .mapNotNull { it.getAttributeOrNull("location") }
 
-        javaLibPaths = jarsFromJavaFacet + jarsFromLegacyPersistence
+        javaLibPaths = (jarsFromJavaFacet + jarsFromLegacyPersistence).distinct()
     }
 
     fun resolveJavaLibs(macros: Macros): List<Path> {

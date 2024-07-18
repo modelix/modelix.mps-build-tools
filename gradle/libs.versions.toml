@@ -1,8 +1,8 @@
 [versions]
 
-kotlin = "1.9.23"
+kotlin = "2.0.0"
 kotlinCoroutines="1.8.1"
-junitJupiter = "5.10.2"
+junitJupiter = "5.10.3"
 
 [plugins]
 
@@ -12,7 +12,7 @@ gitVersion = { id = "com.palantir.git-version", version = "3.1.0" }
 
 [libraries]
 
-kotlin-logging = { group = "io.github.oshai", name = "kotlin-logging", version = "6.0.9" }
+kotlin-logging = { group = "io.github.oshai", name = "kotlin-logging", version = "7.0.0" }
 kotlin-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinCoroutines" }
 kotlin-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "kotlinCoroutines" }
 kotlin-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinCoroutines" }
