@@ -296,7 +296,7 @@ class BuildScriptGenerator(
                     createCompileTarget(
                         modules = listOf(module),
                         classPath = cp,
-                        classPathModules = cycle.getTransitiveDependencies() + cycle,
+                        classPathModules = cycle.getTransitiveDependencies(includeSelf = true),
                         targetName = targetName,
                         targetDependencies = targetDependencies,
                         outputDir = getCompileOutputDir(module),

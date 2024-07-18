@@ -170,12 +170,17 @@ abstract class DependencyGraph<ElementT, KeyT> {
 
         fun isRoot() = reverseDependencies.isEmpty()
 
-        fun getTransitiveDependencies(result: MutableSet<DependencyNode> = HashSet()): Set<DependencyNode> {
-            if (!result.contains(this)) {
-                result += dependencies
-                dependencies.forEach { it.getTransitiveDependencies(result) }
+        fun getTransitiveDependencies(result: MutableSet<DependencyNode> = HashSet(), includeSelf: Boolean = false): Set<DependencyNode> {
+            if (includeSelf) {
+                if (result.contains(this)) return result
+                result.add(this)
+                return getTransitiveDependencies(result, includeSelf = false)
+            } else {
+                for (dependency in dependencies) {
+                    dependency.getTransitiveDependencies(result, includeSelf = true)
+                }
+                return result
             }
-            return result
         }
     }
 
