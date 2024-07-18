@@ -35,7 +35,7 @@ import java.nio.file.Path
 import java.util.stream.Collectors
 
 open class MPSBuildSettings(val project: Project) {
-    private val mpsVersionPattern = Regex("(\\d+\\.\\d+)(\\.\\d+)?")
+    private val mpsVersionPattern = Regex("""(\d+\.\d+)(\.\d+)?(-.*)?""")
     val dependenciesConfig: Configuration = project.configurations.create("mpsBuild-dependencies")
     var mpsDependenciesConfig: Configuration? = null
     var parentPublicationName: String? = "all"
