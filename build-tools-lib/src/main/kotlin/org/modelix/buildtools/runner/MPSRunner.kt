@@ -185,13 +185,14 @@ class MPSRunner(
                     setAttribute("name", "build.dir")
                     setAttribute("location", getBuildDir().absolutePath)
                 }
+                val mpsTmpDir = getBuildDir().parentFile.resolve(getBuildDir().name + "_tmp")
                 newChild("property") {
                     setAttribute("name", "build.mps.config.path")
-                    setAttribute("location", getBuildDir().resolve("config").absolutePath)
+                    setAttribute("location", mpsTmpDir.resolve("config").absolutePath)
                 }
                 newChild("property") {
                     setAttribute("name", "build.mps.system.path")
-                    setAttribute("location", getBuildDir().resolve("system").absolutePath)
+                    setAttribute("location", mpsTmpDir.resolve("system").absolutePath)
                 }
                 newChild("property") {
                     setAttribute("name", "mps.home")
