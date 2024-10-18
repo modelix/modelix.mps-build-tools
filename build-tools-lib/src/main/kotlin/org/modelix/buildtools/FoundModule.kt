@@ -112,14 +112,31 @@ class FoundModule(
             if (modulePath.isFile) modulePath = modulePath.parentFile
             val moduleMacro = "module" to modulePath.toPath()
             val marcosWithModule = macros.with(moduleMacro)
-            result += moduleDescriptor.resolveJavaLibs(marcosWithModule)
-                .map { it.normalize().toFile() }.filter {
-                    val exists = it.exists()
-                    if (!exists && it.name != "classes" && deploymentDescriptor == null) {
-                        println("File not found: $it, usedBy: $name")
+            result += moduleDescriptor.javaLibPaths.mapNotNull { javaLibPath ->
+                val resolvedPath = marcosWithModule.resolve(javaLibPath).normalize()
+                if (resolvedPath.toFile().exists()) return@mapNotNull resolvedPath.toFile()
+
+                if (deploymentDescriptor == null) {
+                    // If the module is packaged inside a jar without a deployment descriptor then the paths may not be
+                    // correct. Try to fix the path.
+                    if (javaLibPath.startsWith("\${module}/")) {
+                        val tail = javaLibPath.substringAfter("\${module}/").replace("../", "").trimStart('/')
+                        var currentParent: File? = modulePath
+                        while (currentParent != null) {
+                            val candidate = currentParent.resolve(tail)
+                            if (candidate.exists()) {
+                                return@mapNotNull candidate
+                            }
+                            currentParent = currentParent.parentFile.takeIf { it != currentParent }
+                        }
                     }
-                    exists
+                    if (!javaLibPath.endsWith("classes")) {
+                        println("File not found: $javaLibPath, usedBy: $name, modulePath: $modulePath")
+                    }
                 }
+
+                null
+            }
         }
         val deploymentDescriptor = deploymentDescriptor
         if (deploymentDescriptor != null) {
@@ -130,7 +147,7 @@ class FoundModule(
                 .map { it.normalize().toFile() }.filter {
                     val exists = it.exists()
                     if (!exists) {
-                        println("File not found: $it, usedBy: $name")
+                        println("File not found: $it, usedBy: $name, modulePath: $moduleHome")
                     }
                     exists
                 }
