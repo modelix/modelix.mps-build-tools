@@ -61,6 +61,9 @@ class ModulesMiner() {
         searchedFolders.add(file)
 
         if (isIgnored(file, fileFilter)) return
+
+        if (file.length() == 0L) return
+
         if (file.isFile) {
             when (file.extension.lowercase()) {
                 // see jetbrains.mps.project.MPSExtentions
