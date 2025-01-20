@@ -41,6 +41,7 @@ import org.modelix.buildtools.ModulesMiner
 import org.modelix.buildtools.PublicationDependencyGraph
 import org.modelix.buildtools.SourceModuleOwner
 import org.modelix.buildtools.StubsSolutionGenerator
+import org.modelix.buildtools.findExecutableAbsolutePath
 import org.modelix.buildtools.invokelambda.InvokeLambda
 import org.modelix.buildtools.modelixBuildToolsVersion
 import org.modelix.buildtools.newChild
@@ -230,7 +231,7 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
 
         val taskAssembleMpsModules = project.tasks.create("assembleMpsModules", Exec::class.java) {
             workingDir(buildDir.get())
-            commandLine(antScriptFile.map { listOf("ant", "-f", it.asFile.absolutePath, "assemble") }.get())
+            commandLine(antScriptFile.map { listOf(findExecutableAbsolutePath("ant"), "-f", it.asFile.absolutePath, "assemble") }.get())
             standardOutput = System.out
             errorOutput = System.err
             standardInput = System.`in`
