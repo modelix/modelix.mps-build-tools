@@ -33,6 +33,7 @@ class BuildScriptGenerator(
 
     private var compileCycleIds: Map<DependencyGraph<FoundModule, ModuleId>.DependencyNode, Int> = HashMap()
     var generatorHeapSize: String = "2G"
+    var debugPort: Int? = null
     var assembleDependsOnCompile: Boolean = true
     var compileDependsOnGenerate: Boolean = true
     val ideaPlugins: MutableList<IdeaPlugin> = ArrayList()
@@ -208,6 +209,11 @@ class BuildScriptGenerator(
                         }
                         newChild("arg") {
                             setAttribute("value", "-Dfile.encoding=UTF8")
+                        }
+                        debugPort?.let {
+                            newChild("arg") {
+                                setAttribute("value", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:$it")
+                            }
                         }
                     }
                     for (macro in macros.macros) {

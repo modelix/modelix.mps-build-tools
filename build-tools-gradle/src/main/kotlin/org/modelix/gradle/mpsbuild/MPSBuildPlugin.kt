@@ -734,6 +734,7 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
             buildDir = buildDir,
         )
         generator.generatorHeapSize = settings.generatorHeapSize
+        generator.debugPort = settings.debugPort
         generator.ideaPlugins += settings.getPublications().flatMap { it.ideaPlugins }.map { pluginSettings ->
             val moduleName = pluginSettings.getImplementationModuleName()
             val module = (
