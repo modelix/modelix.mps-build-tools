@@ -55,6 +55,7 @@ open class MPSBuildSettings(val project: Project) {
     private val searchPaths: MutableList<String> = ArrayList()
     private val macros: MutableMap<String, String> = HashMap()
     var generatorHeapSize: String = "2G"
+    var debugPort: Int? = null
     var mpsMajorVersion: String? = null
     private var mpsMinorVersion: String? = null
     var mpsFullVersion: String? = null
