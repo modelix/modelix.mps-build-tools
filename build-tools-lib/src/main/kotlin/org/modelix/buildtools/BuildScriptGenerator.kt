@@ -961,9 +961,10 @@ class BuildScriptGenerator(
 private fun getIdeaPluginsBuildDir(buildDir: File) = buildDir.resolve("idea-plugins")
 
 fun findExecutableAbsolutePath(name: String): String {
-    return System.getenv("PATH").split(File.pathSeparatorChar)
-        .map { File(it).resolve(name) }
-        .firstOrNull { it.isFile && it.exists() }
+    return System.getenv("PATH")
+        ?.split(File.pathSeparatorChar)
+        ?.map { File(it).resolve(name) }
+        ?.firstOrNull { it.isFile && it.exists() }
         ?.absolutePath
         ?: name
 }
