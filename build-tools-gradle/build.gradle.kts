@@ -32,3 +32,10 @@ java {
     }
     withSourcesJar()
 }
+
+kotlin {
+    compilerOptions {
+        // https://youtrack.jetbrains.com/issue/KT-74984
+        freeCompilerArgs.add("-Xignore-const-optimization-errors")
+    }
+}
