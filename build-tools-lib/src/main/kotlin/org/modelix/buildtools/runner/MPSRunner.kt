@@ -2,7 +2,9 @@ package org.modelix.buildtools.runner
 
 import org.modelix.buildtools.BuildScriptGenerator
 import org.modelix.buildtools.ModulesMiner
+import org.modelix.buildtools.ProcessExecutor
 import org.modelix.buildtools.buildXmlString
+import org.modelix.buildtools.findExecutableAbsolutePath
 import org.modelix.buildtools.newChild
 import java.io.File
 import java.util.Properties
@@ -98,6 +100,12 @@ class MPSRunner(
         processConfig()
         generateSolution()
         generateAntScriptFile()
+    }
+
+    fun run() {
+        generateAll()
+        val ant = ProcessExecutor()
+        ant.exec(listOf(findExecutableAbsolutePath("ant"), "-f", getAntScriptFile().canonicalPath))
     }
 
     private fun getMpsBuildPropertiesFile() = config.mpsHome!!.resolve("build.properties")
