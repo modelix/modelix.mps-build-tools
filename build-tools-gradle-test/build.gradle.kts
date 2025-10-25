@@ -20,7 +20,7 @@ repositories {
     maven { url = uri("https://artifacts.itemis.cloud/repository/maven-mps/") }
 }
 
-val mpsVersion = project.findProperty("mps.version")?.toString().takeIf { !it.isNullOrBlank() } ?: "2021.1.4"
+val mpsVersion = project.findProperty("mps.version")?.toString().takeIf { !it.isNullOrBlank() } ?: "2025.2.1"
 dependencies {
     compileOnly("com.jetbrains:mps-core:$mpsVersion")
     compileOnly("com.jetbrains:mps-openapi:$mpsVersion")
