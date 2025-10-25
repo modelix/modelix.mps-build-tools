@@ -460,7 +460,7 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
                 config = config.map { config ->
                     if (taskConfig.classPathFromConfigurations.isNotEmpty()) {
                         val resolvedClasspath = taskConfig.classPathFromConfigurations
-                            .flatMap { it.resolvedConfiguration.files }
+                            .flatMap { it.incoming.files }
                         config.copy(
                             classPathElements = config.classPathElements + resolvedClasspath,
                         )
@@ -622,7 +622,7 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
 
     private fun downloadMps(settings: MPSBuildSettings, targetDir: File): File? {
         var mpsDir: File? = null
-        settings.mpsDependenciesConfig?.resolvedConfiguration?.lenientConfiguration?.let {
+        settings.mpsDependenciesConfig?.incoming?.let {
             for (file in it.files) {
                 val targetFile = targetDir.resolve(file.name)
                 if (!targetFile.exists()) {
@@ -671,7 +671,7 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
         ).generateFile(stubsDir.resolve(solutionName).resolve("$solutionName.msd"))
     }
 
-    private fun String.toValidPublicationName() = replace(Regex("[^A-Za-z0-9_\\-.]"), "_").toLowerCase()
+    private fun String.toValidPublicationName() = replace(Regex("[^A-Za-z0-9_\\-.]"), "_").lowercase()
 
     private fun getStubSolutionName(dependency: ResolvedDependency): String {
 //                        val clean: (String)->String = { it.replace(Regex("[^a-zA-Z0-9]"), "_") }
@@ -823,6 +823,6 @@ class MPSBuildPlugin @Inject constructor(val project: Project) : Plugin<Project>
     }
 }
 
-private fun String.firstLetterUppercase() = if (isEmpty()) this else substring(0, 1).toUpperCase() + drop(1)
+private fun String.firstLetterUppercase() = if (isEmpty()) this else substring(0, 1).uppercase() + drop(1)
 
 private fun Class<*>.getResourceName() = "/${name.replace(".", "/")}.class"

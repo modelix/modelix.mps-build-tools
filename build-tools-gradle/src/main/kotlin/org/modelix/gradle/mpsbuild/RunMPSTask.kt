@@ -11,7 +11,7 @@ import org.modelix.buildtools.runner.MPSRunnerConfig
 import java.io.FileInputStream
 import java.io.ObjectInputStream
 
-open class RunMPSTask : JavaExec() {
+abstract class RunMPSTask : JavaExec() {
 
     @Input
     val config: Property<MPSRunnerConfig> = objectFactory.property<MPSRunnerConfig>()

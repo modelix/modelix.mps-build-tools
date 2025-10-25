@@ -11,6 +11,7 @@ buildscript {
 }
 
 plugins {
+    base
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     `maven-publish`
@@ -52,10 +53,10 @@ subprojects {
     version = rootProject.version
 
     repositories {
-        mavenLocal()
+        maven { url = uri("https://artifacts.itemis.cloud/repository/maven-mps/") }
         maven { url = uri("https://repo.maven.apache.org/maven2") }
         mavenCentral()
-        maven { url = uri("https://artifacts.itemis.cloud/repository/maven-mps/") }
+        mavenLocal()
     }
 
     publishing {

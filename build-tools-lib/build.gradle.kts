@@ -12,10 +12,11 @@ dependencies {
     testImplementation(libs.junit.jupiter.api)
     testImplementation(libs.assertj)
     testRuntimeOnly(libs.junit.jupiter.engine)
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 val versionGenDir: Provider<Directory> = project.layout.buildDirectory.dir("version_gen")
-val generateVersionVariable by tasks.creating {
+val generateVersionVariable by tasks.registering {
     doLast {
         val outputDir = versionGenDir.map { it.dir("org/modelix/buildtools") }.get().asFile
         outputDir.mkdirs()
