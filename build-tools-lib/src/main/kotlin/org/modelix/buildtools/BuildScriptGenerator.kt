@@ -948,11 +948,10 @@ class BuildScriptGenerator(
                 )
                 // https://raw.githubusercontent.com/JetBrains/MPS/2023.2/plugins/mps-build/solutions/mpsBuild/source_gen/jetbrains/mps/ide/build/mpsBootstrapCore.xml
                 // https://raw.githubusercontent.com/JetBrains/MPS/2023.3/plugins/mps-build/solutions/mpsBuild/source_gen/jetbrains/mps/ide/build/mpsBootstrapCore.xml
-                "2023.2", "2023.3", "2024.1", "2024.3" -> listOf(
+                else -> listOf(
                     "lib/ant/lib/ant-mps.jar",
                     "lib/util-8.jar",
                 )
-                else -> error("Unsupported MPS version: $mpsVersion ($majorVersion)")
             }
         }
     }
