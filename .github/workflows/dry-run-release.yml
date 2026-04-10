@@ -7,17 +7,17 @@ jobs:
     name: Lint PR commits
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0
-      - uses: wagoid/commitlint-github-action@v5
+      - uses: wagoid/commitlint-github-action@b948419dd99f3fd78a6548d48f94e3df7f6bf3ed # v6
 
   test-release:
     name: Dry-run semantic-release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0
       - name: Checkout branch
@@ -25,12 +25,11 @@ jobs:
         # building releases because --dry-run still filters for configured
         # branches.
         run: git checkout -b main
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
-          node-version: 20
+          node-version-file: '.nvmrc'
       - name: Cache Node packages
-        uses: actions/cache@v4
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
         with:
           path: node_modules
           key: release-${{ hashFiles('package.json') }}-${{ hashFiles('package-lock.json') }}
