@@ -1,6 +1,7 @@
 package org.modelix.buildtools
 
 import org.modelix.buildtools.modulepersistence.DevkitDescriptor
+import org.modelix.buildtools.modulepersistence.GeneratorDescriptor
 import org.modelix.buildtools.modulepersistence.LanguageDescriptor
 
 /**
@@ -41,6 +42,15 @@ class RuntimeDependenciesCollector constructor(private val resolver: ModuleResol
         val compileDeps = HashSet<FoundModule>()
         compileDeps.addAll(devkitSolutions)
         compileDeps.addAll(module.moduleDescriptor!!.moduleDependencies.map { it.idAndName }.resolveAll(module))
+
+        // The language is always implicitly visible to its generator.
+        // https://github.com/JetBrains/MPS/blob/51fdebb7b129ded518bed83523831987ce4af63b/core/kernel/source/jetbrains/mps/smodel/Generator.java#L239
+        if (module.moduleType == ModuleType.Generator) {
+            (module.moduleDescriptor as GeneratorDescriptor)
+                .getLanguage().let { checkNotNull(it) { "No language" } }
+                .let { resolver.resolveModule(it, module) }.let { checkNotNull(it) { "Failed to resolve sourceLanguage $it" } }
+                .let { compileDeps.add(it) }
+        }
 
         return RuntimeDependencies(usedLanguages, langRuntimes, compileDeps)
     }
