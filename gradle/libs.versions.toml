@@ -2,7 +2,7 @@
 
 kotlin = "2.3.21"
 kotlinCoroutines="1.11.0"
-junitJupiter = "5.11.4"
+junitJupiter = "6.1.0"
 
 [plugins]
 
