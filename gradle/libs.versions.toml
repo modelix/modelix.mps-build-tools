@@ -1,6 +1,6 @@
 [versions]
 
-kotlin = "2.3.21"
+kotlin = "2.4.0"
 kotlinCoroutines="1.11.0"
 junitJupiter = "5.11.4"
 
