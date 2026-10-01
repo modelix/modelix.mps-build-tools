@@ -6,11 +6,13 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.JavaExec
 import org.gradle.kotlin.dsl.property
+import org.gradle.work.DisableCachingByDefault
 import org.modelix.buildtools.invokelambda.InvokeLambda
 import org.modelix.buildtools.runner.MPSRunnerConfig
 import java.io.FileInputStream
 import java.io.ObjectInputStream
 
+@DisableCachingByDefault(because = "Runs MPS with side effects and returns its result in memory instead of declaring outputs")
 abstract class RunMPSTask : JavaExec() {
 
     @Input
