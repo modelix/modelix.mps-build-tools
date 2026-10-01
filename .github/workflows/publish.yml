@@ -21,7 +21,7 @@ jobs:
       uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
       with:
         distribution: 'temurin'
-        java-version: '21'
+        java-version: '25'
     - name: Set up Gradle
       uses: gradle/gradle-build-action@ac2d340dc04d9e1113182899e983b5400c17cda1 # v3
     - name: Use tag as version
