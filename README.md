@@ -12,6 +12,29 @@ For individual component specific documentation, see https://docs.modelix.org/mo
 This repository contains `mps-build-tools` which can be used as a replacement for the MPS build language.
 These components are used internally by modelix but can also be applied externally.
 
+## Gradle plugins for MPS plugins
+
+`mps-platform-gradle` provides two Gradle plugins that set up the
+[IntelliJ Platform Gradle Plugin](https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin.html)
+with MPS as the platform. They support MPS 2024.1 and newer.
+
+- `org.modelix.mps.platform` compiles against MPS and runs the tests with MPS.
+  MPS is downloaded from the [itemis Maven repository](https://artifacts.itemis.cloud/repository/maven-mps/)
+  and extracted into the build directory of the root project. The plugin declares that repository itself.
+  Because the plugin adds project repositories, the repositories of `dependencyResolutionManagement` in the settings
+  aren't used anymore and have to be declared in the project, too.
+- `org.modelix.mps.plugin` additionally builds an MPS plugin that is compatible with all supported MPS versions
+  and registers the task `installMpsPlugin`, if an MPS installation is found.
+  Call `publishMpsPlugin()` to publish the plugin zip.
+
+The MPS version is selected with the Gradle property `mps.version.major` (e.g. `2024.3`) or `mps.version`
+(e.g. `2024.3.2`). The plugins folder for `installMpsPlugin` can be specified with `mps.plugins.dir`
+or `mps<platform version>.plugins.dir` (e.g. `mps243.plugins.dir`).
+
+The IntelliJ Platform Gradle Plugin is a dependency of these plugins, so don't declare it with a version yourself.
+Helpers like `publishMpsPlugin()`, `copyMps()`, `mpsHomeDir`, `excludeMPSLibraries` and `includeMetaInfFolder()` are available in
+`org.modelix.gradle.mpsplatform`.
+
 
 # Authors
 
