@@ -39,8 +39,27 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
     dependsOn(generateVersionVariable)
 }
 
+// The library itself targets Java 8, but JUnit 6 requires Java 17. Compile and run only the tests with Java 17.
+val testJavaVersion = 17
+val testJavaLanguageVersion = JavaLanguageVersion.of(testJavaVersion)
+configurations.named("testCompileClasspath") {
+    attributes.attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, testJavaVersion)
+}
+configurations.named("testRuntimeClasspath") {
+    attributes.attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, testJavaVersion)
+}
+tasks.named<JavaCompile>("compileTestJava") {
+    javaCompiler.set(javaToolchains.compilerFor { languageVersion.set(testJavaLanguageVersion) })
+    options.release.set(testJavaVersion)
+}
+tasks.named<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>("compileTestKotlin") {
+    kotlinJavaToolchain.toolchain.use(javaToolchains.launcherFor { languageVersion.set(testJavaLanguageVersion) })
+    compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(testJavaVersion.toString()))
+}
+
 tasks.getByName<Test>("test") {
     useJUnitPlatform()
+    javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(testJavaLanguageVersion) })
 }
 
 publishing {
