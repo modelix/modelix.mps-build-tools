@@ -13,6 +13,7 @@
  */
 package org.modelix.buildtools
 
+import org.zeroturnaround.zip.ZipUtil
 import java.io.File
 import java.net.URI
 import java.nio.file.FileSystems
@@ -28,8 +29,8 @@ class PluginModuleOwner(path: ModulePath, val pluginId: String, val name: String
     fun getModuleJarFolders(): List<File> {
         try {
             val pluginFolder = path.getLocalAbsolutePath().normalize().toFile()
-            val pluginXml = pluginFolder.resolve("META-INF").resolve("plugin.xml")
-            val xml = readXmlFile(pluginXml)
+            val pluginXml = readPluginXml(pluginFolder) ?: throw RuntimeException("No META-INF/plugin.xml found in $pluginFolder")
+            val xml = readXmlFile(pluginXml.inputStream(), "$pluginFolder/META-INF/plugin.xml")
             val folders = xml.documentElement.childElements("extensions").flatMap { it.childElements() }
                 .asSequence()
                 .filter { it.tagName.endsWith("LanguageLibrary") }
@@ -49,6 +50,25 @@ class PluginModuleOwner(path: ModulePath, val pluginId: String, val name: String
     private fun allSubFolders() = (path.getLocalAbsolutePath().toFile().listFiles() ?: arrayOf()).toList()
 
     companion object {
+        /**
+         * Like the IDE, this reads the descriptor either from the META-INF folder of the plugin or from one of the jars
+         * in its lib folder. The plugins bundled with recent MPS versions only contain it inside the jars.
+         */
+        fun readPluginXml(pluginFolder: File): ByteArray? {
+            val pluginXml = pluginFolder.resolve("META-INF").resolve("plugin.xml")
+            if (pluginXml.isFile) return pluginXml.readBytes()
+
+            val libFolder = pluginFolder.resolve("lib")
+            // The MPS home folder isn't a plugin, even if one of its jars contains a plugin.xml (e.g. mps-workbench.jar)
+            if (libFolder.resolve("mps-boot.jar").exists()) return null
+            return (libFolder.listFiles() ?: emptyArray())
+                .filter { it.isFile && it.extension == "jar" }
+                .sortedBy { it.name }
+                .firstNotNullOfOrNull { ZipUtil.unpackEntry(it, "META-INF/plugin.xml") }
+        }
+
+        fun isPluginFolder(folder: File): Boolean = readPluginXml(folder) != null
+
         fun fromPluginFolder(path: ModulePath): PluginModuleOwner {
             val pluginPath = path.getLocalAbsolutePath().toFile()
             val lines = if (pluginPath.isFile && pluginPath.extension == "jar") {
@@ -57,7 +77,8 @@ class PluginModuleOwner(path: ModulePath, val pluginId: String, val name: String
                     it.getPath("META-INF", "plugin.xml").readLines()
                 }
             } else {
-                path.getLocalAbsolutePath().resolve("META-INF").resolve("plugin.xml").readLines()
+                val pluginXml = readPluginXml(pluginPath) ?: throw RuntimeException("No META-INF/plugin.xml found in $pluginPath")
+                pluginXml.toString(Charsets.UTF_8).lines()
             }
             return fromPluginDescriptor(path, lines)
         }
