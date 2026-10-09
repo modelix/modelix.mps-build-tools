@@ -168,8 +168,7 @@ class ModulesMiner() {
                     )
                 }
             } else {
-                val pluginXml = File(File(file, "META-INF"), "plugin.xml")
-                val isPluginDir = pluginXml.exists()
+                val isPluginDir = PluginModuleOwner.isPluginFolder(file)
                 val pluginOwner = if (isPluginDir) PluginModuleOwner.fromPluginFolder(origin.localModulePath(file)) else null
                 if (pluginOwner != null) modules.addPlugin(pluginOwner)
                 val subFolders = if (pluginOwner == null) {
