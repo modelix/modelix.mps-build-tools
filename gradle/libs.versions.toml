@@ -8,7 +8,7 @@ junitJupiter = "6.1.3"
 
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-gitVersion = { id = "com.palantir.git-version", version = "5.1.0" }
+gitVersion = { id = "com.palantir.git-version", version = "5.2.0" }
 
 [libraries]
 
